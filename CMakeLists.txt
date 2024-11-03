@@ -3,6 +3,8 @@ set(CMAKE_C_STANDARD 23)
 project(tetris)
 add_executable(tetris
   tetris.c
+  playfield.c
+  tetromino.c
   cli.c
   )
 
