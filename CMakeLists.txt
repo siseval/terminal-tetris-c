@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.10)
 set(CMAKE_C_STANDARD 23)
 project(tetris)
 add_executable(tetris
+  main.c
   tetris.c
-  playfield.c
-  tetromino.c
+  field.c
+  piece.c
+  piece-data.c
   cli.c
   )
 
