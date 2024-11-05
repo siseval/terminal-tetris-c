@@ -7,6 +7,7 @@ static void init_curses()
     noecho();
     nocbreak();
     curs_set(0);
+    timeout(REFRESH_MS);
 
     start_color();
     use_default_colors();

@@ -5,10 +5,11 @@
 #include <stdint.h>
 #include "piece-data.c"
 
-#define NUM_SQUARES 4
-#define NUM_ROTATIONS 4
-#define NUM_TYPES 7
-#define SQUARE_STR "::"
+#define PIECE_NUM_SQUARES 4
+#define PIECE_NUM_ROTATIONS 4
+#define PIECE_NUM_TYPES 7
+#define PIECE_SQUARE_STR "◉" //"▒▒"
+#define PIECE_GHOST_SQUARE_STR "◯"
 
 enum piece_type
 {
