@@ -8,6 +8,8 @@
 #include "cli.h"
 #include "field.h"
 
+#define REFRESH_MS 100
+
 #define set_color(T) attron(COLOR_PAIR(T + 1));
 
 void tetris_run();

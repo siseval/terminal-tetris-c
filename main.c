@@ -11,14 +11,14 @@ static void init_curses()
     start_color();
     use_default_colors();
 
-    init_pair(1, COLOR_CYAN, -1);
-    init_pair(2, COLOR_YELLOW, -1);
-    init_pair(3, COLOR_GREEN, -1);
-    init_pair(4, COLOR_RED, -1);
-    init_pair(5, COLOR_WHITE, -1);
-    init_pair(6, COLOR_BLUE, -1);
-    init_pair(7, COLOR_MAGENTA, -1);
-    init_pair(8, COLOR_BLACK, -1);
+    init_pair(CYAN + 1, COLOR_CYAN, -1);
+    init_pair(YELLOW + 1, COLOR_YELLOW, -1);
+    init_pair(GREEN + 1, COLOR_GREEN, -1);
+    init_pair(RED + 1, COLOR_RED, -1);
+    init_pair(BLUE + 1, COLOR_BLUE, -1);
+    init_pair(MAGENTA + 1, COLOR_MAGENTA, -1);
+    init_pair(WHITE + 1, COLOR_WHITE, -1);
+    init_pair(BLACK + 1, COLOR_BLACK, -1);
 }
 
 int main()

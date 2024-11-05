@@ -28,9 +28,9 @@ enum piece_color
     YELLOW = 1,
     GREEN = 2,
     RED = 3,
-    WHITE = 4,
-    BLUE = 5,
-    MAGENTA = 6,
+    BLUE = 4,
+    MAGENTA = 5,
+    WHITE = 6,
     BLACK = 7
 };
 

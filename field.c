@@ -26,7 +26,7 @@ void field_destroy(struct field* field)
 
 void field_randomize_current_piece(struct field* field)
 {
-    struct piece piece = piece_create(rand() % (NUM_TYPES));
+    struct piece piece = piece_create(L);
     *field->cur_piece = piece;
 }
 

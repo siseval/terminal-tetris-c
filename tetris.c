@@ -57,8 +57,7 @@ void tetris_run()
 {
     srand(time(NULL));
     struct field* field = field_create(10, 20);
-    struct piece piece = piece_create(J);
-    //field_randomize_current_piece(field);
+    field_randomize_current_piece(field);
 
     main_loop(field);
 }
