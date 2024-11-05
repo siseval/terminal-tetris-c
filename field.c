@@ -1,4 +1,6 @@
 #include "field.h"
+#include "piece.h"
+#include "tetris.h"
 
 struct field* field_create(const uint8_t width, const uint8_t height)
 {
@@ -8,51 +10,62 @@ struct field* field_create(const uint8_t width, const uint8_t height)
     field->height = height;
 
     field->cur_piece = calloc(1, sizeof(struct piece));
-    field->grid = calloc(1, sizeof(enum shape) * width * height);
+    field->grid = malloc(sizeof(enum piece_type) * width * height);
+    memset(field->grid, NONE_TYPE, sizeof(enum piece_type) * width * height);
 
     return field;
+}
+
+void field_destroy(struct field* field)
+{
+    free(field->cur_piece);
+    free(field->grid);
+    free(field);
 }
 
 
 void field_randomize_current_piece(struct field* field)
 {
-    struct piece piece = piece_create(1 + rand() % (NUM_SHAPES - 1));
+    struct piece piece = piece_create(rand() % (NUM_TYPES));
     *field->cur_piece = piece;
 }
 
 
-uint8_t field_get_draw_width(struct field* field)
+uint8_t field_get_draw_width(const struct field* field)
 {
     return field->width * 2 + 2;
 }
-uint8_t field_get_draw_height(struct field* field)
+uint8_t field_get_draw_height(const struct field* field)
 {
     return field->height + 2;
 }
 
+
+bool field_cur_piece_collides(const struct field* field, const int8_t dx, const int8_t dy)
+{
+
+    return false;
+}
+
+
+void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
+{
+    
+}
+
+
 static void draw_border(const uint8_t field_width, const uint8_t field_height, const uint8_t start_x, const uint8_t start_y)
 {
-    char top_bar[field_width * 2 + 3];
-    char bot_bar[field_width * 2 + 3];
-
-    memset(top_bar, '\0', sizeof(top_bar));
-    memset(bot_bar, '\0', sizeof(bot_bar));
-
-    strcat(top_bar, "╭");
-    strcat(bot_bar, "╰");
-    for (int i = 0; i < field_width * 2; i++)
+    set_color(BLACK);
+    mvaddstr(start_y, start_x, "╭");
+    mvaddstr(start_y + field_height + 1, start_x, "╰");
+    for (int i = 1; i <= field_width * 2 + 1; i++)
     {
-        strcat(top_bar, "─");
-        strcat(bot_bar, "─");
+        mvaddstr(start_y, start_x + i, "─");
+        mvaddstr(start_y + field_height + 1, start_x + i, "─");
     }
-    strcat(top_bar, "╮\0");
-    strcat(bot_bar, "╯\0");
-
-    move(start_y, start_x);
-    addstr(top_bar);
-    move(start_y + field_height + 1, start_x);
-    addstr(bot_bar);
-
+    mvaddstr(start_y, start_x + field_width * 2 + 2, "╮");
+    mvaddstr(start_y + field_height + 1, start_x + field_width * 2 + 2, "╯"); 
     for (int i = 0; i < field_height; i++)
     {
         move(start_y + i + 1, start_x);
@@ -68,6 +81,7 @@ void field_draw(const struct field* field, const uint16_t start_x, const uint16_
     {
         draw_border(field->width, field->height, start_x - 1, start_y - 1);
     }
-    //piece_draw(*field->cur_piece, start_x + field->pos_x, start_x + field->pos_y);
+    set_color(field->cur_piece->type);
+    piece_draw(field->cur_piece, start_x + field->pos_x, start_y + field->pos_y);
     refresh();
 }

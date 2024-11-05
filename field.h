@@ -15,15 +15,18 @@ struct field
 
     struct piece* cur_piece;
 
-    enum shape* grid;
+    enum piece_type* grid;
 };
 
 struct field* field_create(const uint8_t width, const uint8_t height);
+void field_destroy(struct field* field);
 
 void field_randomize_current_piece(struct field* field);
 
-uint8_t field_get_draw_width(struct field* field);
-uint8_t field_get_draw_height(struct field* field);
+uint8_t field_get_draw_width(const struct field* field);
+uint8_t field_get_draw_height(const struct field* field);
+
+void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy);
 
 void field_draw(const struct field* field, const uint16_t start_x, const uint16_t start_y, const bool redraw_border);
 

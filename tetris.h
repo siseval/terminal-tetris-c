@@ -8,9 +8,8 @@
 #include "cli.h"
 #include "field.h"
 
+#define set_color(T) attron(COLOR_PAIR(T + 1));
 
 void tetris_run();
-void tetris_main_loop(struct field* field);
-void tetris_handle_input();
 
 #endif
