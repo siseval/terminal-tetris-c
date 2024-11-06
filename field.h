@@ -52,6 +52,8 @@ uint8_t field_get_draw_height(const struct field* field);
 
 bool field_cur_piece_collides(const struct field* field, const int8_t dx, const int8_t dy, const int8_t rotation);
 
+void field_lock_cur_piece(struct field* field);
+
 void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy);
 void field_rotate_cur_piece(struct field* field, const int8_t direction);
 

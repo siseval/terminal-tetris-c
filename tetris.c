@@ -31,6 +31,11 @@ uint64_t time_ms(void) {
 
 static bool update_timer(struct timer* timer)
 {
+    if (!timer->running)
+    {
+        timer->prev_time = time_ms();
+        return false;
+    }
     if (time_ms() - timer->prev_time > timer->trigger_time)
     {
         timer->prev_time = time_ms();
@@ -69,8 +74,8 @@ static void main_loop(struct field* field)
     uint16_t screen_width = 0;
     uint16_t screen_height = 0;
 
-    struct timer game_clock = { 480, time_ms() };
-    struct timer lock_timer = { 480, time_ms() };
+    struct timer game_clock = {true, 480, time_ms() };
+    struct timer lock_timer = {false, 480, time_ms() };
 
     while (true)
     {
@@ -80,6 +85,10 @@ static void main_loop(struct field* field)
         if (update_timer(&game_clock))
         {
             field_move_cur_piece(field, 0, 1);
+        }
+        if (update_timer(&lock_timer))
+        {
+            field_lock_cur_piece(field);
         }
         
         handle_input(field, &game_clock);

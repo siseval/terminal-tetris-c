@@ -16,6 +16,7 @@ void tetris_run();
 
 struct timer
 {
+    bool running;
     uint64_t trigger_time;
     uint64_t prev_time;
 };

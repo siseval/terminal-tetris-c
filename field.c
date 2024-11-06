@@ -82,6 +82,17 @@ bool field_cur_piece_collides(const struct field* field, const int8_t dx, const 
 }
 
 
+void field_lock_cur_piece(struct field* field)
+{
+    for (int i = 0; i < PIECE_NUM_SQUARES; i++)
+    {
+        uint8_t cell_x = field->pos_x + field->cur_piece->coordinates[field->cur_piece->rotation][i][0];
+        uint8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
+        field_set_cell(field, cell_x, cell_y, field->cur_piece->type);
+    }
+}
+
+
 void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
 {
     if (field_cur_piece_collides(field, dx, dy, field->cur_piece->rotation))
