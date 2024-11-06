@@ -28,8 +28,8 @@ void field_new_cur_piece(struct field* field)
 {
     struct piece piece = piece_create(rand() % PIECE_NUM_TYPES);
     *field->cur_piece = piece;
-    field->pos_x = field->width / 2 - PIECE_NUM_SQUARES;
-    field->pos_y = 0;
+    field->pos_x = (field->width / 2 - PIECE_NUM_SQUARES / 2) - (piece.type == I ? 1 : 0);
+    field->pos_y = piece.type == I || piece.type == O ? -1 : 0;
 }
 
 
@@ -105,19 +105,25 @@ void field_lock_cur_piece(struct field* field)
 }
 
 
-void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
+bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
 {
     if (field_cur_piece_collides(field, dx, dy, field->cur_piece->rotation))
     {
-        return;
+        return false;
     }
     field->pos_x += dx;
     field->pos_y += dy;
+    return true;
 }
 
-void field_rotate_cur_piece(struct field* field, const int8_t direction)
+bool field_rotate_cur_piece(struct field* field, const int8_t direction)
 {
-    piece_rotate(field->cur_piece, direction);
+    if (!field_cur_piece_collides(field, 0, 0, piece_get_next_rotation(field->cur_piece, direction)))
+    {
+        piece_rotate(field->cur_piece, direction);
+        return true;
+    }
+    return false;
 }
 
 bool field_cur_piece_will_lock(struct field* field)
@@ -188,7 +194,7 @@ static void draw_grid(const struct field* field, const uint8_t start_x, const ui
 }
 
 
-void field_draw(struct field* field, const uint16_t start_x, const uint16_t start_y, const bool redraw_border)
+void field_draw(struct field* field, const uint16_t start_x, const uint16_t start_y)
 {
     erase();
     draw_grid_border(field->width, field->height, start_x - 1, start_y - 1);

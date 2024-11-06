@@ -8,7 +8,8 @@
 #include "cli.h"
 #include "field.h"
 
-#define REFRESH_MS 50
+#define TETRIS_REFRESH_MS 50
+#define TETRIS_MAX_JUGGLE_MOVES 15
 
 #define set_color(T) attron(COLOR_PAIR(T + 1));
 

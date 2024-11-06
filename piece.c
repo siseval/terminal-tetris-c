@@ -16,15 +16,20 @@ struct piece piece_create(const enum piece_type type)
 
 void piece_rotate(struct piece* piece, const int8_t direction)
 {
-    piece->rotation += direction;
-    if (piece->rotation >= PIECE_NUM_ROTATIONS)
+    piece->rotation = piece_get_next_rotation(piece, direction);
+}
+
+uint8_t piece_get_next_rotation(const struct piece* piece, const int8_t direction)
+{
+    if (piece->rotation + direction >= PIECE_NUM_ROTATIONS)
     {
-        piece->rotation = 0;
+        return 0;
     }
-    if (piece->rotation < 0)
+    if (piece->rotation + direction < 0)
     {
-        piece->rotation = PIECE_NUM_ROTATIONS - 1;
+        return PIECE_NUM_ROTATIONS - 1;
     }
+    return piece->rotation + direction;
 }
 
 void piece_draw(const struct piece* piece, const uint8_t start_x, const uint8_t start_y)
