@@ -72,30 +72,29 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
 
 static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made)
 {
+    bool did_move = false;
     char input = getch();
     switch (input)
     {
         case 'h':
-            field_move_cur_piece(field, -1, 0);
+            did_move = field_move_cur_piece(field, -1, 0, true);
             break;
         case 'l':
-            field_move_cur_piece(field, 1, 0);
-            handle_lock_timer(field, lock_timer, moves_made, true);
+            did_move = field_move_cur_piece(field, 1, 0, true);
             break;
         case 'j':
-            field_move_cur_piece(field, 0, 1);
-            handle_lock_timer(field, lock_timer, moves_made, false);
+            field_move_cur_piece(field, 0, 1, true);
             game_clock->prev_time = time_ms();
             break;
         case 'a':
-            field_rotate_cur_piece(field, -1);
-            handle_lock_timer(field, lock_timer, moves_made, true);
+            did_move = field_rotate_cur_piece(field, -1);
             break;
         case 's':
-            field_rotate_cur_piece(field, 1);
-            handle_lock_timer(field, lock_timer, moves_made, true);
+            did_move = field_rotate_cur_piece(field, 1);
             break;
     }
+
+    handle_lock_timer(field, lock_timer, moves_made, did_move);
 }
 
 static void main_loop(struct field* field)
@@ -114,12 +113,13 @@ static void main_loop(struct field* field)
 
         if (update_timer(&game_clock))
         {
-            field_move_cur_piece(field, 0, 1);
+            field_move_cur_piece(field, 0, 1, true);
             handle_lock_timer(field, &lock_timer, &moves_made, false);
         }
         if (update_timer(&lock_timer))
         {
             field_lock_cur_piece(field);
+            moves_made = 0;
         }
         
         handle_input(field, &game_clock, &lock_timer, &moves_made);

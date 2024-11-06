@@ -55,7 +55,7 @@ bool field_cur_piece_collides(const struct field* field, const int8_t dx, const 
 
 void field_lock_cur_piece(struct field* field);
 
-bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy);
+bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy, bool do_collision_check);
 bool field_rotate_cur_piece(struct field* field, const int8_t direction);
 bool field_cur_piece_will_lock(struct field* field);
 

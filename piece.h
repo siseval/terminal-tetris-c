@@ -7,7 +7,9 @@
 
 #define PIECE_NUM_SQUARES 4
 #define PIECE_NUM_ROTATIONS 4
+#define PIECE_NUM_COLLISION_CHECKS 4
 #define PIECE_NUM_TYPES 7
+
 #define PIECE_SQUARE_STR "◉" //"▒▒"
 #define PIECE_GHOST_SQUARE_STR "◯"
 
@@ -29,8 +31,8 @@ enum piece_color
     YELLOW = 1,
     GREEN = 2,
     RED = 3,
-    BLUE = 4,
-    MAGENTA = 5,
+    MAGENTA = 4,
+    BLUE = 5,
     WHITE = 6,
     BLACK = 7
 };
@@ -39,7 +41,8 @@ struct piece
 {
     enum piece_type type;
     int8_t rotation;
-    int8_t coordinates[4][4][2];
+    uint8_t coordinates[PIECE_NUM_ROTATIONS][PIECE_NUM_TYPES][2];
+    int8_t collision_checks[PIECE_NUM_ROTATIONS][2][PIECE_NUM_COLLISION_CHECKS][2];
 };
 
 struct piece piece_create(const enum piece_type type);

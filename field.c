@@ -105,9 +105,9 @@ void field_lock_cur_piece(struct field* field)
 }
 
 
-bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
+bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy, bool do_collision_check)
 {
-    if (field_cur_piece_collides(field, dx, dy, field->cur_piece->rotation))
+    if (do_collision_check && field_cur_piece_collides(field, dx, dy, field->cur_piece->rotation))
     {
         return false;
     }
@@ -118,11 +118,33 @@ bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
 
 bool field_rotate_cur_piece(struct field* field, const int8_t direction)
 {
-    if (!field_cur_piece_collides(field, 0, 0, piece_get_next_rotation(field->cur_piece, direction)))
+    uint8_t attempted_rotation = piece_get_next_rotation(field->cur_piece, direction);
+    if (!field_cur_piece_collides(field, 0, 0, attempted_rotation))
     {
         piece_rotate(field->cur_piece, direction);
         return true;
     }
+
+    if (!field_cur_piece_collides(field, 0, -1, attempted_rotation))
+    {
+        field_move_cur_piece(field, 0, -1, false);
+        piece_rotate(field->cur_piece, direction);
+        return true;
+    }
+
+    for (int i = 0; i < PIECE_NUM_COLLISION_CHECKS; i++)
+    {
+        int8_t check_x = field->cur_piece->collision_checks[attempted_rotation][direction][i][0];
+        int8_t check_y = field->cur_piece->collision_checks[attempted_rotation][direction][i][1];
+
+        if (!field_cur_piece_collides(field, check_x, check_y, attempted_rotation))
+        {
+            field_move_cur_piece(field, check_x, check_y, false);
+            piece_rotate(field->cur_piece, direction);
+            return true;
+        }
+    }
+
     return false;
 }
 

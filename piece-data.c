@@ -446,7 +446,7 @@ static const uint8_t piece_data_collision_coords[7][4][4][2] =
     } 
 };
 
-static const int8_t piece_collision_checks[7][4][2][4][2] = 
+static const int8_t piece_data_collision_checks[7][4][2][4][2] = 
 {
     // I PIECE:
     {
@@ -803,7 +803,6 @@ static const int8_t piece_collision_checks[7][4][2][4][2] =
             }
         }
     },
-    
     // J PIECE:
     {
         // FROM 0:
