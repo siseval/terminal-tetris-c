@@ -1,6 +1,5 @@
 #include "field.h"
 #include "piece.h"
-#include "tetris.h"
 
 struct field* field_create(const uint8_t width, const uint8_t height)
 {
@@ -24,9 +23,9 @@ void field_destroy(struct field* field)
 }
 
 
-void field_new_cur_piece(struct field* field)
+void field_set_cur_piece(struct field* field, const enum piece_type piece_type)
 {
-    struct piece piece = piece_create(rand() % PIECE_NUM_TYPES);
+    struct piece piece = piece_create(piece_type);
     *field->cur_piece = piece;
     field->pos_x = (field->width / 2 - PIECE_NUM_SQUARES / 2) - (piece.type == I ? 1 : 0);
     field->pos_y = piece.type == I || piece.type == O ? -1 : 0;
@@ -59,6 +58,42 @@ void field_clear_grid(struct field* field)
         int8_t cell_x = i % field->width;
         int8_t cell_y = i / field->width;
         field_set_cell(field, cell_x, cell_y, NONE_TYPE);
+    }
+}
+
+
+static bool line_should_clear(const struct field* field, uint8_t line_index)
+{
+    bool broken = false;
+    for (int8_t i = 0; i < field->width; i++)
+    {
+        if (field_get_cell(field, i, line_index) == NONE_TYPE)
+        {
+            broken = true;
+        }
+    }
+    return !broken;
+}
+
+static void clear_line(struct field* field, uint8_t line_index)
+{
+    for (uint8_t i = line_index; i > 0; i--)
+    {
+        for (uint8_t j = 0; j < field->width; j++)
+        {
+            field_set_cell(field, j, i, field_get_cell(field, j, i - 1));
+        }
+    }
+}
+
+void field_clear_lines(struct field* field)
+{
+    for (uint8_t i = 0; i < field->height; i++)
+    {
+        if (line_should_clear(field, i))
+        {
+            clear_line(field, i);
+        }
     }
 }
 
@@ -101,7 +136,6 @@ void field_lock_cur_piece(struct field* field)
         uint8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
         field_set_cell(field, cell_x, cell_y, field->cur_piece->type);
     }
-    field_new_cur_piece(field);
 }
 
 
@@ -114,6 +148,24 @@ bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy,
     field->pos_x += dx;
     field->pos_y += dy;
     return true;
+}
+
+uint8_t field_get_lowest_height(struct field* field)
+{
+    for (uint8_t i = field->pos_y + 1; i < field->height; i++)
+    {
+        if (field_cur_piece_collides(field, 0, i - field->pos_y, field->cur_piece->rotation))
+        {
+            return i - 1;
+        }
+    }
+    return 0;
+}
+
+void field_slam_cur_piece(struct field* field)
+{
+    field_move_cur_piece(field, 0, field_get_lowest_height(field) - field->pos_y, false);
+    field_lock_cur_piece(field);
 }
 
 bool field_rotate_cur_piece(struct field* field, const int8_t direction)
@@ -151,77 +203,4 @@ bool field_rotate_cur_piece(struct field* field, const int8_t direction)
 bool field_cur_piece_will_lock(struct field* field)
 {
     return field_cur_piece_collides(field, 0, 1, field->cur_piece->rotation);
-}
-
-
-static void draw_grid_border(const uint8_t field_width, const uint8_t field_height, const uint8_t start_x, const uint8_t start_y)
-{
-    int8_t top_y = start_y;
-    int8_t bot_y = start_y + field_height + 1;
-    int8_t left_x = start_x;
-    int8_t right_x = start_x + field_width * 2;
-
-    set_color(BLACK);
-    mvaddstr(top_y, left_x, BORDER_TOP_LEFT_STR);
-    mvaddstr(bot_y, left_x, BORDER_BOT_LEFT_STR);
-    for (int i = 1; i <= right_x - left_x; i++)
-    {
-        mvaddstr(top_y, left_x + i, BORDER_TOP_LINE_STR);
-        mvaddstr(bot_y, left_x + i, BORDER_BOT_LINE_STR);
-    }
-    mvaddstr(top_y, right_x, BORDER_TOP_RIGHT_STR);
-    mvaddstr(bot_y, right_x, BORDER_BOT_RIGHT_STR); 
-    for (int i = 1; i < bot_y - top_y; i++)
-    {
-        mvaddstr(top_y + i, left_x, BORDER_VERT_LINE_STR);
-        mvaddstr(top_y + i, right_x, BORDER_VERT_LINE_STR);
-    }
-}
-
-static void draw_stats_box_border(const uint8_t box_width, const uint8_t box_height, const uint8_t start_x, const uint8_t start_y)
-{
-    int8_t top_y = start_y;
-    int8_t bot_y = start_y + box_height + 1;
-    int8_t left_x = start_x;
-    int8_t right_x = start_x + box_width * 2 + 2;
-
-    set_color(BLACK);
-    mvaddstr(top_y, left_x, BOX_TOP_LEFT_STR);
-    mvaddstr(bot_y, left_x, BOX_BOT_LEFT_STR);
-    for (int i = 1; i <= right_x - left_x; i++)
-    {
-        mvaddstr(top_y, left_x + i, BOX_TOP_LINE_STR);
-        mvaddstr(bot_y, left_x + i, BOX_BOT_LINE_STR);
-    }
-    mvaddstr(top_y, right_x, BOX_TOP_RIGHT_STR);
-    mvaddstr(bot_y, right_x, BOX_BOT_RIGHT_STR); 
-    for (int i = 1; i < bot_y - top_y; i++)
-    {
-        mvaddstr(top_y + i, left_x, BOX_VERT_LINE_STR);
-        mvaddstr(top_y + i, right_x, BOX_VERT_LINE_STR);
-    }
-}
-
-static void draw_grid(const struct field* field, const uint8_t start_x, const uint8_t start_y)
-{
-    for (int i = 0; i < field->width * field->height; i++)
-    {
-        int8_t cell_x = i % field->width;
-        int8_t cell_y = i / field->width;
-        enum piece_type cell_type = field_get_cell(field, cell_x, cell_y);
-        char* cell_str = cell_type == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
-        set_color(cell_type);
-        mvaddstr(start_y + cell_y, start_x + cell_x * 2, cell_str);
-    }
-}
-
-
-void field_draw(struct field* field, const uint16_t start_x, const uint16_t start_y)
-{
-    erase();
-    draw_grid_border(field->width, field->height, start_x - 1, start_y - 1);
-    draw_stats_box_border(5, 12, start_x + field->width * 2 + 2, start_y + 3);
-    draw_grid(field, start_x, start_y);
-    set_color(field->cur_piece->type);
-    piece_draw(field->cur_piece, start_x + field->pos_x * 2, start_y + field->pos_y);
 }

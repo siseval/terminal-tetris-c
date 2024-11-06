@@ -50,6 +50,6 @@ struct piece piece_create(const enum piece_type type);
 void piece_rotate(struct piece* tetromino, const int8_t direction);
 uint8_t piece_get_next_rotation(const struct piece* piece, const int8_t direction);
 
-void piece_draw(const struct piece* piece, const uint8_t start_x, const uint8_t start_y);
+void piece_draw(const struct piece* piece, const uint8_t start_x, const uint8_t start_y, char* symbol);
 
 #endif
