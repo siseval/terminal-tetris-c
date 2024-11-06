@@ -24,20 +24,31 @@ void field_destroy(struct field* field)
 }
 
 
-void field_randomize_current_piece(struct field* field)
+void field_new_cur_piece(struct field* field)
 {
     struct piece piece = piece_create(L);
     *field->cur_piece = piece;
+    field->pos_x = field->width / 2 - PIECE_NUM_SQUARES;
+    field->pos_y = 0;
 }
+
 
 
 enum piece_type field_get_cell(const struct field* field, const int8_t cell_x, const int8_t cell_y)
 {
+    if (cell_x < 0 || cell_x >= field->width || cell_y < 0 || cell_y >= field->height)
+    {
+        return NONE_TYPE;
+    }
     return field->grid[cell_y * field->width + cell_x];
 }
 
 void field_set_cell(struct field* field, const int8_t cell_x, const int8_t cell_y, const enum piece_type piece_type)
 {
+    if (cell_x < 0 || cell_x >= field->width || cell_y < 0 || cell_y >= field->height)
+    {
+        return;
+    }
     field->grid[cell_y * field->width + cell_x] = piece_type;
 }
 
@@ -106,6 +117,11 @@ void field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy)
 void field_rotate_cur_piece(struct field* field, const int8_t direction)
 {
     piece_rotate(field->cur_piece, direction);
+}
+
+bool field_cur_piece_will_lock(struct field* field)
+{
+    return field_cur_piece_collides(field, 0, 1, field->cur_piece->rotation);
 }
 
 

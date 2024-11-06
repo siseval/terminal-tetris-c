@@ -22,7 +22,8 @@ static bool screen_dimensions_too_large(uint16_t screen_width, uint16_t screen_h
     return field_get_draw_width(field) > screen_width || field_get_draw_height(field) > screen_height;
 }
 
-uint64_t time_ms(void) {
+uint64_t time_ms(void) 
+{
 
     struct timeval timeval;
     gettimeofday(&timeval, NULL);
@@ -44,14 +45,23 @@ static bool update_timer(struct timer* timer)
     return false;
 }
 
+static void handle_lock_timer(struct field* field, struct timer* lock_timer)
+{
+    if (!field_cur_piece_will_lock(field))
+    {
+        lock_timer->running = false;
+    }
+}
 
-static void handle_input(struct field* field, struct timer* game_clock)
+
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer)
 {
     char input = getch();
     switch (input)
     {
         case 'h':
-            field_move_cur_piece(field, -1, 0); 
+            field_move_cur_piece(field, -1, 0);
+            
             break;
         case 'l':
             field_move_cur_piece(field, 1, 0);
@@ -91,7 +101,7 @@ static void main_loop(struct field* field)
             field_lock_cur_piece(field);
         }
         
-        handle_input(field, &game_clock);
+        handle_input(field, &game_clock, &lock_timer);
         field_draw(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2, redraw_border);
     }
 }
@@ -101,7 +111,7 @@ void tetris_run()
     srand(time(NULL));
     struct field* field = field_create(10, 20);
     field_clear_grid(field);
-    field_randomize_current_piece(field);
+    field_new_cur_piece(field);
 
     main_loop(field);
 }
