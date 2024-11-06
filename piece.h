@@ -22,7 +22,7 @@ enum piece_type
     L = 4,
     J = 5,
     T = 6,
-    NONE_TYPE
+    NONE_TYPE = 7
 };
 
 enum piece_color

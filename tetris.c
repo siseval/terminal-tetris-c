@@ -124,57 +124,6 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
     handle_lock_timer(field, lock_timer, moves_made, did_move);
 }
 
-static void main_loop(struct field* field)
-{
-    uint16_t screen_width = 0;
-    uint16_t screen_height = 0;
-
-    struct timer game_clock = { true, 480, time_ms() };
-    struct timer lock_timer = { false, 480, time_ms() };
-
-    enum piece_type* next_grid = malloc(sizeof(enum piece_type) * PIECE_NUM_SQUARES * PIECE_NUM_SQUARES);
-    enum piece_type* held_grid = malloc(sizeof(enum piece_type) * PIECE_NUM_SQUARES * PIECE_NUM_SQUARES);
-
-    memset(next_grid, NONE_TYPE, sizeof(enum piece_type) * PIECE_NUM_SQUARES * PIECE_NUM_SQUARES);
-    memset(held_grid, NONE_TYPE, sizeof(enum piece_type) * PIECE_NUM_SQUARES * PIECE_NUM_SQUARES);
-
-    uint8_t moves_made = 0;
-
-    uint8_t bag_index = 1;
-    enum piece_type bag[PIECE_NUM_TYPES];
-    for (int i = 0; i < PIECE_NUM_TYPES; i++)
-    {
-        bag[i] = i;
-    }
-    shuffle_bag(bag);
-    field_set_cur_piece(field, bag[0]);
-
-    while (true)
-    {
-        if (screen_dimensions_too_large(&screen_width, &screen_height, field)) { continue; }
-
-        if (bag_index >= PIECE_NUM_TYPES)
-        {
-            shuffle_bag(bag);
-            bag_index = 0;
-        }
-
-        if (update_timer(&game_clock))
-        {
-            field_move_cur_piece(field, 0, 1, true);
-            handle_lock_timer(field, &lock_timer, &moves_made, false);
-        }
-        if (update_timer(&lock_timer))
-        {
-            lock_cur_piece(field, &moves_made, bag, &bag_index);            
-        }
-
-        handle_input(field, &game_clock, &lock_timer, &moves_made, bag, &bag_index);
-        field_clear_lines(field);
-        tetris_draw(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2, next_grid, held_grid);
-    }
-}
-
 
 static void draw_grid_border(const uint8_t field_width, const uint8_t field_height, const uint8_t start_x, const uint8_t start_y)
 {
@@ -200,31 +149,7 @@ static void draw_grid_border(const uint8_t field_width, const uint8_t field_heig
     }
 }
 
-static void draw_stats_box_border(const uint8_t box_width, const uint8_t box_height, const uint8_t start_x, const uint8_t start_y)
-{
-    int8_t top_y = start_y;
-    int8_t bot_y = start_y + box_height + 1;
-    int8_t left_x = start_x;
-    int8_t right_x = start_x + box_width * 2 + 2;
-
-    set_color(BLACK);
-    mvaddstr(top_y, left_x, BOX_TOP_LEFT_STR);
-    mvaddstr(bot_y, left_x, BOX_BOT_LEFT_STR);
-    for (int i = 1; i <= right_x - left_x; i++)
-    {
-        mvaddstr(top_y, left_x + i, BOX_TOP_LINE_STR);
-        mvaddstr(bot_y, left_x + i, BOX_BOT_LINE_STR);
-    }
-    mvaddstr(top_y, right_x, BOX_TOP_RIGHT_STR);
-    mvaddstr(bot_y, right_x, BOX_BOT_RIGHT_STR); 
-    for (int i = 1; i < bot_y - top_y; i++)
-    {
-        mvaddstr(top_y + i, left_x, BOX_VERT_LINE_STR);
-        mvaddstr(top_y + i, right_x, BOX_VERT_LINE_STR);
-    }
-}
-
-static void draw_grid(const enum piece_type* grid, const uint8_t width, const uint8_t height, const uint8_t start_x, const uint8_t start_y)
+static void draw_field_grid(const enum piece_type* grid, const uint8_t width, const uint8_t height, const uint8_t start_x, const uint8_t start_y)
 {
     for (int i = 0; i < width * height; i++)
     {
@@ -232,25 +157,94 @@ static void draw_grid(const enum piece_type* grid, const uint8_t width, const ui
         int8_t cell_y = i / width;
         enum piece_type cell_type = grid[cell_y * width + cell_x];
         char* cell_str = cell_type == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
+        if (cell_type < 0 || cell_type >= PIECE_NUM_TYPES)
+        {
+            int s = 0;
+        }
         set_color(cell_type);
         mvaddstr(start_y + cell_y, start_x + cell_x * 2, cell_str);
     }
 }
 
-
-void tetris_draw(struct field* field, const uint16_t start_x, const uint16_t start_y, const enum piece_type* next_grid, const enum piece_type* held_grid)
+static void draw_field(struct field* field, const uint16_t start_x, const uint16_t start_y)
 {
     erase();
     draw_grid_border(field->width, field->height, start_x - 1, start_y - 1);
-    draw_grid_border(6, 8, start_x + field->width * 2 + 2, start_y + 3);
-
-    draw_grid(field->grid, field->width, field->height, start_x, start_y);
-    draw_grid(field->grid, field->width, field->height, start_x, start_y);
+    draw_field_grid(field->grid, field->width, field->height, start_x, start_y);
 
     set_color(field->cur_piece->type);
     piece_draw(field->cur_piece, start_x + field->pos_x * 2, start_y + field->pos_y + (field_get_lowest_height(field) - field->pos_y), PIECE_GHOST_SQUARE_STR);
     piece_draw(field->cur_piece, start_x + field->pos_x * 2, start_y + field->pos_y, PIECE_SQUARE_STR);
 }
+
+static void draw_piece_grid(const struct piece piece, const uint16_t start_x, const uint16_t start_y)
+{
+    draw_grid_border(PIECE_NUM_SQUARES, PIECE_NUM_SQUARES, start_x, start_y);
+    // for (int i = 0; i < PIECE_NUM_SQUARES * PIECE_NUM_SQUARES; i++)
+    // {
+    //     uint8_t cell_x = i % PIECE_NUM_SQUARES;
+    //     uint8_t cell_y = i / PIECE_NUM_SQUARES;
+    //     set_color(NONE_TYPE);
+    //     mvaddstr(1 + start_y + cell_y, 1 + start_x + cell_x * 2, GRID_EMPTY_CELL_STR);
+    // }
+    set_color(piece.type);
+    piece_draw(&piece, 1 + start_x, 1 + start_y, PIECE_SQUARE_STR);
+}
+
+
+static void main_loop(struct field* field)
+{
+    uint16_t screen_width = 0;
+    uint16_t screen_height = 0;
+
+    struct timer game_clock = { true, 480, time_ms() };
+    struct timer lock_timer = { false, 480, time_ms() };
+
+    uint8_t moves_made = 0;
+
+    uint8_t bag_index = 1;
+    enum piece_type bag[PIECE_NUM_TYPES];
+    for (int i = 0; i < PIECE_NUM_TYPES; i++)
+    {
+        bag[i] = i;
+    }
+    shuffle_bag(bag);
+    field_set_cur_piece(field, bag[0]);
+
+    struct piece next_piece;
+    struct piece held_piece;
+
+    while (true)
+    {
+        if (screen_dimensions_too_large(&screen_width, &screen_height, field)) { continue; }
+
+        if (bag_index >= PIECE_NUM_TYPES)
+        {
+            shuffle_bag(bag);
+            bag_index = 0;
+        }
+
+        next_piece = piece_create(bag[bag_index]);
+
+        if (update_timer(&game_clock))
+        {
+            field_move_cur_piece(field, 0, 1, true);
+            handle_lock_timer(field, &lock_timer, &moves_made, false);
+        }
+        if (update_timer(&lock_timer))
+        {
+            lock_cur_piece(field, &moves_made, bag, &bag_index);            
+        }
+
+        handle_input(field, &game_clock, &lock_timer, &moves_made, bag, &bag_index);
+        field_clear_lines(field);
+
+        draw_field(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2);
+        draw_piece_grid(next_piece, field->width * 2 + 2, screen_height / 2 - field->height / 2 + 2);
+        //draw_piece_grid(next_grid, field->width * 2 + 2, screen_height / 2 - field->height / 2 + 10);
+    }
+}
+
 
 void tetris_run()
 {

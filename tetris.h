@@ -14,7 +14,6 @@
 #define set_color(T) attron(COLOR_PAIR(T + 1));
 
 void tetris_run();
-void tetris_draw(struct field* field, const uint16_t start_x, const uint16_t start_y, const enum piece_type* next_grid, const enum piece_type* held_grid);
 
 struct timer
 {
