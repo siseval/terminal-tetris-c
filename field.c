@@ -26,7 +26,7 @@ void field_destroy(struct field* field)
 
 void field_new_cur_piece(struct field* field)
 {
-    struct piece piece = piece_create(L);
+    struct piece piece = piece_create(rand() % PIECE_NUM_TYPES);
     *field->cur_piece = piece;
     field->pos_x = field->width / 2 - PIECE_NUM_SQUARES;
     field->pos_y = 0;
@@ -101,6 +101,7 @@ void field_lock_cur_piece(struct field* field)
         uint8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
         field_set_cell(field, cell_x, cell_y, field->cur_piece->type);
     }
+    field_new_cur_piece(field);
 }
 
 
@@ -179,7 +180,9 @@ static void draw_grid(const struct field* field, const uint8_t start_x, const ui
     {
         int8_t cell_x = i % field->width;
         int8_t cell_y = i / field->width;
-        char* cell_str = field_get_cell(field, cell_x, cell_y) == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
+        enum piece_type cell_type = field_get_cell(field, cell_x, cell_y);
+        char* cell_str = cell_type == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
+        set_color(cell_type);
         mvaddstr(start_y + cell_y, start_x + cell_x * 2, cell_str);
     }
 }

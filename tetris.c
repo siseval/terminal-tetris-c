@@ -50,7 +50,10 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer)
     if (!field_cur_piece_will_lock(field))
     {
         lock_timer->running = false;
+        return;
     }
+    lock_timer->running = true;
+    lock_timer->prev_time = lock_timer->running ? lock_timer->prev_time : time_ms();
 }
 
 
@@ -61,20 +64,24 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
     {
         case 'h':
             field_move_cur_piece(field, -1, 0);
-            
+            handle_lock_timer(field, lock_timer);
             break;
         case 'l':
             field_move_cur_piece(field, 1, 0);
+            handle_lock_timer(field, lock_timer);
             break;
         case 'j':
             field_move_cur_piece(field, 0, 1);
+            handle_lock_timer(field, lock_timer);
             game_clock->prev_time = time_ms();
             break;
         case 'a':
             field_rotate_cur_piece(field, -1);
+            handle_lock_timer(field, lock_timer);
             break;
         case 's':
             field_rotate_cur_piece(field, 1);
+            handle_lock_timer(field, lock_timer);
             break;
     }
 }
@@ -95,6 +102,7 @@ static void main_loop(struct field* field)
         if (update_timer(&game_clock))
         {
             field_move_cur_piece(field, 0, 1);
+            handle_lock_timer(field, &lock_timer);
         }
         if (update_timer(&lock_timer))
         {
