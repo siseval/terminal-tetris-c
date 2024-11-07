@@ -4,6 +4,8 @@ project(tetris)
 add_executable(tetris
   main.c
   tetris.c
+  draw.c
+  queue-bag.c
   field.c
   piece.c
   piece-data.c

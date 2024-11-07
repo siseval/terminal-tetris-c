@@ -200,6 +200,7 @@ bool field_rotate_cur_piece(struct field* field, const int8_t direction)
     return false;
 }
 
+
 bool field_cur_piece_will_lock(struct field* field)
 {
     return field_cur_piece_collides(field, 0, 1, field->cur_piece->rotation);

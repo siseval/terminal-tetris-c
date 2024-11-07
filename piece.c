@@ -42,14 +42,3 @@ uint8_t piece_get_next_rotation(const struct piece* piece, const int8_t directio
     }
     return piece->rotation + direction;
 }
-
-
-void piece_draw(const struct piece* piece, const uint8_t start_x, const uint8_t start_y, char* symbol)
-{
-    for (int8_t i = 0; i < PIECE_NUM_SQUARES; i++)
-    {
-        int8_t cell_x = start_x + piece->coordinates[piece->rotation][i][0] * 2;
-        int8_t cell_y = start_y + piece->coordinates[piece->rotation][i][1];
-        mvaddstr(cell_y, cell_x, symbol);
-    }
-}

@@ -6,12 +6,15 @@
 #include <locale.h>
 #include <curses.h>
 #include "cli.h"
+#include "queue-bag.h"
 #include "field.h"
+#include "draw.h"
 
 #define TETRIS_REFRESH_MS 50
 #define TETRIS_MAX_JUGGLE_MOVES 15
+#define TETRIS_QUEUE_LENGTH 5
 
-#define set_color(T) attron(COLOR_PAIR(T + 1));
+
 
 void tetris_run();
 
