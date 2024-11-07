@@ -147,7 +147,10 @@ static void main_loop(struct field* field)
 
     while (true)
     {
-        if (screen_dimensions_too_large(&screen_width, &screen_height, field)) { continue; }
+        if (screen_dimensions_too_large(&screen_width, &screen_height, field)) 
+        {
+            continue;
+        }
 
         if (update_timer(&game_clock))
         {
@@ -163,8 +166,6 @@ static void main_loop(struct field* field)
         field_clear_lines(field);
 
         draw_game(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2);
-        //draw_piece_grid(next_piece, field->width * 2 + 2, screen_height / 2 - field->height / 2 + 2);
-        //draw_piece_grid(next_grid, field->width * 2 + 2, screen_height / 2 - field->height / 2 + 10);
     }
 }
 
