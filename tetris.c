@@ -1,7 +1,4 @@
 #include "tetris.h"
-#include "field.h"
-#include "piece.h"
-#include "queue-bag.h"
 
 
 static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_height)
@@ -70,33 +67,34 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     }
 }
 
-static void lock_cur_piece(struct field* field, uint8_t* moves_made, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index)
+static void lock_cur_piece(struct field* field, uint8_t* moves_made, struct queuebag* queuebag)
 {
     field_lock_cur_piece(field);
-    field_set_cur_piece(field, queue_pull(queue, bag, bag_index));
+    field_set_cur_piece(field, queuebag_queue_pull(queuebag));
+    queuebag->can_hold = true;
     *moves_made = 0;
 }
 
 
-static void hold_piece(struct field* field, enum piece_type* held_piece_type, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index, bool* has_held)
+static void hold_piece(struct field* field, struct queuebag* queuebag)
 {
-    if (*has_held)
+    if (!queuebag->can_hold)
     {
         return;
     }
-    *has_held = true;
-    if (*held_piece_type != NONE_TYPE)
+    queuebag->can_hold = false;
+    if (queuebag->held_piece_type != NONE_TYPE)
     {
-        enum piece_type held_buffer = *held_piece_type;
-        *held_piece_type = field->cur_piece->type;
+        enum piece_type held_buffer = queuebag->held_piece_type;
+        queuebag->held_piece_type = field->cur_piece->type;
         field_set_cur_piece(field, held_buffer);
         return;
     }
-    *held_piece_type = field->cur_piece->type;
-    field_set_cur_piece(field, bag_pull(bag, bag_index));
+    queuebag->held_piece_type = field->cur_piece->type;
+    field_set_cur_piece(field, queuebag_bag_pull(queuebag));
 }
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index, enum piece_type* held_piece_type, bool* has_held)
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag)
 {
     bool did_move = false;
     char input = getch();
@@ -120,10 +118,10 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             break;
         case ' ':
             field_slam_cur_piece(field);
-            lock_cur_piece(field, moves_made, queue, bag, bag_index);
+            lock_cur_piece(field, moves_made, queuebag);
             break;
         case 'd':
-            hold_piece(field, held_piece_type, queue, bag, bag_index, has_held);
+            hold_piece(field, queuebag);
             break;
     }
     handle_lock_timer(field, lock_timer, moves_made, did_move);
@@ -140,18 +138,9 @@ static void main_loop(struct field* field)
 
     uint8_t moves_made = 0;
 
-    uint8_t bag_index = 1;
-    enum piece_type bag[PIECE_NUM_TYPES];
-    for (uint8_t i = 0; i < PIECE_NUM_TYPES; i++)
-    {
-        bag[i] = i;
-    }
-    bag_shuffle(bag);
+    struct queuebag* queuebag = queuebag_create();
 
-    enum piece_type queue[TETRIS_QUEUE_LENGTH];
-    memset(queue, NONE_TYPE, sizeof(queue));
-    queue_fill(queue, bag, &bag_index);
-    field_set_cur_piece(field, queue_pull(queue, bag, &bag_index));
+    field_set_cur_piece(field, queuebag_queue_pull(queuebag));
 
     enum piece_type held_piece_type = NONE_TYPE;
     bool has_held = false;
@@ -167,10 +156,10 @@ static void main_loop(struct field* field)
         }
         if (update_timer(&lock_timer))
         {
-            lock_cur_piece(field, &moves_made, queue, bag, &bag_index);            
+            lock_cur_piece(field, &moves_made, queuebag);
         }
 
-        handle_input(field, &game_clock, &lock_timer, &moves_made, queue, bag, &bag_index, &held_piece_type, &has_held);
+        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag);
         field_clear_lines(field);
 
         draw_game(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2);

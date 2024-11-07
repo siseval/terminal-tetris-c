@@ -6,7 +6,7 @@
 #include <locale.h>
 #include <curses.h>
 #include "cli.h"
-#include "queue-bag.h"
+#include "queuebag.h"
 #include "field.h"
 #include "draw.h"
 

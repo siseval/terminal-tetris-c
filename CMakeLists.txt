@@ -5,7 +5,7 @@ add_executable(tetris
   main.c
   tetris.c
   draw.c
-  queue-bag.c
+  queuebag.c
   field.c
   piece.c
   piece-data.c
