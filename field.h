@@ -5,24 +5,6 @@
 #include <string.h>
 #include "piece.h"
 
-#define BORDER_TOP_LEFT_STR "―"//"╭"
-#define BORDER_TOP_RIGHT_STR "―"//"╮"
-#define BORDER_BOT_LEFT_STR "―"//"╘"  //"╰"
-#define BORDER_BOT_RIGHT_STR "―"// "╛" //"╯"
-#define BORDER_VERT_LINE_STR " "//"｜" // "│"
-#define BORDER_TOP_LINE_STR "―"//"─"
-#define BORDER_BOT_LINE_STR "―"//"═"
-
-#define BOX_TOP_LEFT_STR "╭"//"╭"
-#define BOX_TOP_RIGHT_STR "╮"//"╮"
-#define BOX_BOT_LEFT_STR "╰"//"╘"  //"╰"
-#define BOX_BOT_RIGHT_STR "╯"// "╛" //"╯"
-#define BOX_VERT_LINE_STR "│"//"｜" // "│"
-#define BOX_TOP_LINE_STR "─"//"─"
-#define BOX_BOT_LINE_STR "─"//"═"
-
-#define GRID_EMPTY_CELL_STR "◌"
-
 
 struct field
 {
@@ -57,7 +39,7 @@ bool field_cur_piece_collides(const struct field* field, const int8_t dx, const 
 void field_lock_cur_piece(struct field* field);
 
 bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy, bool do_collision_check);
-uint8_t field_get_lowest_height(struct field* field);
+uint8_t field_get_lowest_height(const struct field* field);
 void field_slam_cur_piece(struct field* field);
 bool field_rotate_cur_piece(struct field* field, const int8_t direction);
 bool field_cur_piece_will_lock(struct field* field);

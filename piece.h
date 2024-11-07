@@ -10,8 +10,6 @@
 #define PIECE_NUM_COLLISION_CHECKS 4
 #define PIECE_NUM_TYPES 7
 
-#define PIECE_SQUARE_STR "◉" //"▒▒"
-#define PIECE_GHOST_SQUARE_STR "◯"
 
 enum piece_type
 {

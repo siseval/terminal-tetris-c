@@ -150,7 +150,7 @@ bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy,
     return true;
 }
 
-uint8_t field_get_lowest_height(struct field* field)
+uint8_t field_get_lowest_height(const struct field* field)
 {
     for (uint8_t i = field->pos_y + 1; i < field->height; i++)
     {

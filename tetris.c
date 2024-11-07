@@ -1,4 +1,6 @@
 #include "tetris.h"
+#include "draw.h"
+#include "piece.h"
 
 
 static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_height)
@@ -145,6 +147,8 @@ static void main_loop(struct field* field)
     enum piece_type held_piece_type = NONE_TYPE;
     bool has_held = false;
 
+    struct stats stats = { 0, 0 };
+
     while (true)
     {
         if (screen_dimensions_too_large(&screen_width, &screen_height, field)) 
@@ -165,7 +169,11 @@ static void main_loop(struct field* field)
         handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag);
         field_clear_lines(field);
 
-        draw_game(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2);
+        uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
+        uint16_t game_start_y = screen_height / 2 - field->height / 2;
+        draw_game(field, game_start_x, game_start_y);
+        draw_stats(stats, game_start_x + field->width * 2 + 2, game_start_y + 2);
+        draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 5, game_start_y + 3);
     }
 }
 

@@ -9,8 +9,6 @@
 #include "queuebag.h"
 #include "stats.h"
 #include "cli.h"
-
-
 #include "draw.h"
 
 #define TETRIS_REFRESH_MS 50

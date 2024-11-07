@@ -1,4 +1,3 @@
-#include <curses.h>
 #include "tetris.h"
 
 static void init_curses()
@@ -19,7 +18,7 @@ static void init_curses()
     init_pair(BLUE + 1, COLOR_BLUE, -1);
     init_pair(MAGENTA + 1, COLOR_MAGENTA, -1);
     init_pair(WHITE + 1, COLOR_WHITE, -1);
-    init_pair(BLACK + 1, COLOR_BLACK, -1);
+    init_pair(GRAY + 1, COLOR_WHITE, -1);
 }
 
 int main()
