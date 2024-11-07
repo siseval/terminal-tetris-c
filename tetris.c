@@ -1,4 +1,7 @@
 #include "tetris.h"
+#include "field.h"
+#include "piece.h"
+#include "queue-bag.h"
 
 
 static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_height)
@@ -22,7 +25,7 @@ static bool screen_dimensions_too_large(uint16_t* screen_width, uint16_t* screen
     return field_get_draw_width(field) > *screen_width || field_get_draw_height(field) > *screen_height;
 }
 
-uint64_t time_ms(void) 
+static uint64_t time_ms(void) 
 {
     struct timeval timeval;
     gettimeofday(&timeval, NULL);
@@ -75,7 +78,25 @@ static void lock_cur_piece(struct field* field, uint8_t* moves_made, enum piece_
 }
 
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index)
+static void hold_piece(struct field* field, enum piece_type* held_piece_type, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index, bool* has_held)
+{
+    if (*has_held)
+    {
+        return;
+    }
+    *has_held = true;
+    if (*held_piece_type != NONE_TYPE)
+    {
+        enum piece_type held_buffer = *held_piece_type;
+        *held_piece_type = field->cur_piece->type;
+        field_set_cur_piece(field, held_buffer);
+        return;
+    }
+    *held_piece_type = field->cur_piece->type;
+    field_set_cur_piece(field, bag_pull(bag, bag_index));
+}
+
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, enum piece_type queue[QUEUE_LENGTH], enum piece_type bag[PIECE_NUM_TYPES], uint8_t* bag_index, enum piece_type* held_piece_type, bool* has_held)
 {
     bool did_move = false;
     char input = getch();
@@ -101,11 +122,12 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             field_slam_cur_piece(field);
             lock_cur_piece(field, moves_made, queue, bag, bag_index);
             break;
+        case 'd':
+            hold_piece(field, held_piece_type, queue, bag, bag_index, has_held);
+            break;
     }
     handle_lock_timer(field, lock_timer, moves_made, did_move);
 }
-
-
 
 
 static void main_loop(struct field* field)
@@ -131,6 +153,9 @@ static void main_loop(struct field* field)
     queue_fill(queue, bag, &bag_index);
     field_set_cur_piece(field, queue_pull(queue, bag, &bag_index));
 
+    enum piece_type held_piece_type = NONE_TYPE;
+    bool has_held = false;
+
     while (true)
     {
         if (screen_dimensions_too_large(&screen_width, &screen_height, field)) { continue; }
@@ -145,7 +170,7 @@ static void main_loop(struct field* field)
             lock_cur_piece(field, &moves_made, queue, bag, &bag_index);            
         }
 
-        handle_input(field, &game_clock, &lock_timer, &moves_made, queue, bag, &bag_index);
+        handle_input(field, &game_clock, &lock_timer, &moves_made, queue, bag, &bag_index, &held_piece_type, &has_held);
         field_clear_lines(field);
 
         draw_game(field, screen_width / 2 - (field->width * 2) / 2, screen_height / 2 - field->height / 2);
