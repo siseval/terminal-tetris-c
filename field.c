@@ -86,15 +86,18 @@ static void clear_line(struct field* field, uint8_t line_index)
     }
 }
 
-void field_clear_lines(struct field* field)
+uint8_t field_clear_lines(struct field* field)
 {
+    uint8_t lines_cleared = 0;
     for (uint8_t i = 0; i < field->height; i++)
     {
         if (line_should_clear(field, i))
         {
             clear_line(field, i);
+            lines_cleared += 1;
         }
     }
+    return lines_cleared;
 }
 
 

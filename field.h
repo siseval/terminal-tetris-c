@@ -29,7 +29,7 @@ enum piece_type field_get_cell(const struct field* field, const int8_t cell_x, c
 void field_set_cell(struct field* field, const int8_t cell_x, const int8_t cell_y, const enum piece_type piece_type);
 
 void field_clear_grid(struct field* field);
-void field_clear_lines(struct field* field);
+uint8_t field_clear_lines(struct field* field);
 
 uint8_t field_get_draw_width(const struct field* field);
 uint8_t field_get_draw_height(const struct field* field);

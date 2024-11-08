@@ -147,7 +147,8 @@ static void main_loop(struct field* field)
     enum piece_type held_piece_type = NONE_TYPE;
     bool has_held = false;
 
-    struct stats stats = { 0, 0 };
+    struct stats stats = { 0, 0, 0, 0 };
+    uint64_t start_time = time_ms();
 
     while (true)
     {
@@ -167,7 +168,9 @@ static void main_loop(struct field* field)
         }
 
         handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag);
-        field_clear_lines(field);
+
+        stats.lines_cleared += field_clear_lines(field);
+        stats.time = time_ms() - start_time;
 
         uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
         uint16_t game_start_y = screen_height / 2 - field->height / 2;
