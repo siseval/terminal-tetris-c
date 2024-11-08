@@ -52,8 +52,7 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     {
         lock_timer->running = true;
 
-        *moves_made += moved;
-        if (*moves_made >= TETRIS_MAX_JUGGLE_MOVES)
+        if (*moves_made + moved >= TETRIS_MAX_JUGGLE_MOVES)
         {
             lock_timer->prev_time = 0;
         }
@@ -61,6 +60,7 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
         {
             lock_timer->prev_time = time_ms();
         }
+        *moves_made += moved;
     }
     else
     {
@@ -69,10 +69,11 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     }
 }
 
-static void lock_cur_piece(struct field* field, uint8_t* moves_made, struct queuebag* queuebag)
+static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag)
 {
     field_lock_cur_piece(field);
     field_set_cur_piece(field, queuebag_queue_pull(queuebag));
+    game_clock->prev_time = time_ms();
     queuebag->can_hold = true;
     *moves_made = 0;
 }
@@ -120,7 +121,7 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             break;
         case ' ':
             field_slam_cur_piece(field);
-            lock_cur_piece(field, moves_made, queuebag);
+            lock_cur_piece(field, game_clock, moves_made, queuebag);
             break;
         case 'd':
             hold_piece(field, queuebag);
@@ -164,7 +165,7 @@ static void main_loop(struct field* field)
         }
         if (update_timer(&lock_timer))
         {
-            lock_cur_piece(field, &moves_made, queuebag);
+            lock_cur_piece(field, &game_clock, &moves_made, queuebag);
         }
 
         handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag);
