@@ -28,7 +28,7 @@ int main()
 
     attron(A_BOLD);
 
-    tetris_run();
+    tetris_main_menu();
 
     endwin();
 }

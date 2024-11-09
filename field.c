@@ -27,7 +27,7 @@ void field_set_cur_piece(struct field* field, const enum piece_type piece_type)
 {
     struct piece piece = piece_create(piece_type);
     *field->cur_piece = piece;
-    field->pos_x = (field->width / 2 - PIECE_NUM_SQUARES / 2) - (piece.type == I ? 1 : 0);
+    field->pos_x = field->width / 2 - PIECE_NUM_SQUARES / 2;
     field->pos_y = piece.type == I || piece.type == O ? -1 : 0;
 }
 
@@ -180,17 +180,10 @@ bool field_rotate_cur_piece(struct field* field, const int8_t direction)
         return true;
     }
 
-    if (!field_cur_piece_collides(field, 0, -1, attempted_rotation))
-    {
-        field_move_cur_piece(field, 0, -1, false);
-        piece_rotate(field->cur_piece, direction);
-        return true;
-    }
-
     for (int i = 0; i < PIECE_NUM_COLLISION_CHECKS; i++)
     {
-        int8_t check_x = field->cur_piece->collision_checks[attempted_rotation][direction][i][0];
-        int8_t check_y = field->cur_piece->collision_checks[attempted_rotation][direction][i][1];
+        int8_t check_x = field->cur_piece->collision_checks[field->cur_piece->rotation][direction == 1][i][0];
+        int8_t check_y = field->cur_piece->collision_checks[field->cur_piece->rotation][direction == 1][i][1];
 
         if (!field_cur_piece_collides(field, check_x, check_y, attempted_rotation))
         {

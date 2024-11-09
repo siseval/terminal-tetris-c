@@ -1,13 +1,24 @@
 #include "tetris.h"
-#include "draw.h"
-#include "piece.h"
 
+static int get_scrw(void)
+{
+    int scrh, scrw;
+    getmaxyx(stdscr, scrh, scrw);
+    return scrw;
+}
+
+static int get_scrh(void)
+{
+    int scrh, scrw;
+    getmaxyx(stdscr, scrh, scrw);
+    return scrh;
+}
 
 static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_height)
 {
     bool changed = false;
-    uint16_t new_screen_width = cli_get_scrw();
-    uint16_t new_screen_height = cli_get_scrh();
+    uint16_t new_screen_width = get_scrw();
+    uint16_t new_screen_height = get_scrh();
     if (*screen_width !=  new_screen_width || *screen_height != new_screen_height)
     {
         changed = true;
@@ -19,8 +30,8 @@ static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_h
 
 static bool screen_dimensions_too_large(uint16_t* screen_width, uint16_t* screen_height, struct field* field)
 {
-    *screen_width = cli_get_scrw();
-    *screen_height = cli_get_scrh();
+    *screen_width = get_scrw();
+    *screen_height = get_scrh();
     return field_get_draw_width(field) > *screen_width || field_get_draw_height(field) > *screen_height;
 }
 
@@ -69,13 +80,14 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     }
 }
 
-static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag)
+static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, uint32_t* cur_points)
 {
     field_lock_cur_piece(field);
     field_set_cur_piece(field, queuebag_queue_pull(queuebag));
     game_clock->prev_time = time_ms();
     queuebag->can_hold = true;
     *moves_made = 0;
+    *cur_points += TETRIS_POINTS_PER_PIECE;
 }
 
 
@@ -97,7 +109,7 @@ static void hold_piece(struct field* field, struct queuebag* queuebag)
     field_set_cur_piece(field, queuebag_bag_pull(queuebag));
 }
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag)
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, uint32_t* cur_points)
 {
     bool did_move = false;
     char input = getch();
@@ -121,7 +133,7 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             break;
         case ' ':
             field_slam_cur_piece(field);
-            lock_cur_piece(field, game_clock, moves_made, queuebag);
+            lock_cur_piece(field, game_clock, moves_made, queuebag, cur_points);
             break;
         case 'd':
             hold_piece(field, queuebag);
@@ -131,7 +143,37 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
 }
 
 
-static void main_loop(struct field* field)
+static void add_points(uint32_t* cur_points, uint8_t lines_cleared, uint16_t cur_level, uint16_t cur_combo_chain)
+{
+    static const uint16_t points_per_line_clear[] = { 100, 300, 500, 800 };
+    static const uint16_t points_per_combo_level = 50;
+
+    *cur_points += points_per_line_clear[lines_cleared - 1] * cur_level;
+    *cur_points += points_per_combo_level * cur_combo_chain;
+}
+
+static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct timer* game_clock, struct timer* lock_timer)
+{
+    static const uint16_t timer_times_ms[] = { 480, 410, 365, 325, 285, 250, 215, 190, 175, 145, 125, 105, 90, 75, 60, 45, 35, 25, 12, 0 };
+
+    *cur_level += levels_gained; 
+    if (*cur_level <= 20)
+    {
+        game_clock->trigger_time = timer_times_ms[*cur_level - 1];
+    }
+    else
+    {
+        lock_timer->trigger_time = timer_times_ms[(*cur_level - 20) - 1];
+    }
+}
+
+static bool should_level_up(uint16_t* lines_cleared_this_level, uint16_t cur_level)
+{
+    return *lines_cleared_this_level >= TETRIS_LINES_PER_LEVEL + 5 * cur_level;
+}
+
+
+static void main_loop(struct field* field, uint8_t starting_level)
 {
     uint16_t screen_width = 0;
     uint16_t screen_height = 0;
@@ -148,8 +190,11 @@ static void main_loop(struct field* field)
     enum piece_type held_piece_type = NONE_TYPE;
     bool has_held = false;
 
-    struct stats stats = { 0, 0, 0, 0 };
+    struct stats stats = { 0, starting_level, 0, 0 };
     uint64_t start_time = time_ms();
+
+    uint16_t lines_cleared_this_level = 0;
+    uint16_t cur_combo_chain = 0;
 
     while (true)
     {
@@ -165,30 +210,66 @@ static void main_loop(struct field* field)
         }
         if (update_timer(&lock_timer))
         {
-            lock_cur_piece(field, &game_clock, &moves_made, queuebag);
+            lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats.points);
         }
 
-        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag);
+        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats.points);
 
-        stats.lines_cleared += field_clear_lines(field);
+        uint8_t lines_cleared_this_loop = field_clear_lines(field);
+        lines_cleared_this_level += lines_cleared_this_loop;
+
+        if (should_level_up(&lines_cleared_this_level, stats.level))
+        {
+            level_up(&stats.level, 1, &game_clock, &lock_timer);
+            lines_cleared_this_level = 0;
+        }
+
+        stats.lines_cleared += lines_cleared_this_loop;
         stats.time = time_ms() - start_time;
+
+        cur_combo_chain = lines_cleared_this_loop > 0 ? cur_combo_chain + 1 : 0;
+        add_points(&stats.points, lines_cleared_this_loop, stats.level, cur_combo_chain);
 
         uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
         uint16_t game_start_y = screen_height / 2 - field->height / 2;
         draw_game(field, game_start_x, game_start_y);
         draw_stats(stats, game_start_x + field->width * 2 + 2, game_start_y + 2);
-        draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 5, game_start_y + 3);
+        draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 3);
     }
 }
 
 
-void tetris_run()
+void tetris_run(uint8_t starting_level)
 {
     srand(time(NULL));
     struct field* field = field_create(10, 20);
     field_clear_grid(field);
 
-    main_loop(field);
+    main_loop(field, starting_level);
 }
 
+void tetris_main_menu(void)
+{
+    struct button level_0_button = {"0 "};
+    struct button level_10_button = {"10"};
+    struct button level_20_button = {"20"};
+    struct button quit_button = {"quit"};
+    struct menu starting_level_menu = { "level", CYAN, WHITE, true, false, 4, 0, level_0_button, level_10_button, level_20_button, quit_button};
+    uint8_t gaps[] = { 3, 2, 2, 3 };
+
+    menu_run(&starting_level_menu, gaps, 0, true);
+
+    if (starting_level_menu.selected == 3)
+    {
+        tetris_quit();
+        return;
+    }
+    uint8_t starting_levels[] = { 0, 10, 20 };
+    tetris_run(starting_levels[starting_level_menu.selected]);
+}
+void tetris_quit(void)
+{
+    endwin();
+    exit(0);
+}
 
