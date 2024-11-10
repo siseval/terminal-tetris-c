@@ -10,7 +10,6 @@ add_executable(tetris
   piece.c
   piece-data.c
   stats.c
-  menu.c
   )
 
 find_package(Curses REQUIRED)

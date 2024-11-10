@@ -138,6 +138,10 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
         case 'd':
             hold_piece(field, queuebag);
             break;
+        case 'q':
+            field_destroy(field);
+            tetris_main_menu();
+            return;
     }
     handle_lock_timer(field, lock_timer, moves_made, did_move);
 }
@@ -154,6 +158,10 @@ static void add_points(uint32_t* cur_points, uint8_t lines_cleared, uint16_t cur
 
 static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct timer* game_clock, struct timer* lock_timer)
 {
+    if (levels_gained <= 0)
+    {
+        return;
+    }
     static const uint16_t timer_times_ms[] = { 480, 410, 365, 325, 285, 250, 215, 190, 175, 145, 125, 105, 90, 75, 60, 45, 35, 25, 12, 0 };
 
     *cur_level += levels_gained; 
@@ -165,11 +173,6 @@ static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct ti
     {
         lock_timer->trigger_time = timer_times_ms[(*cur_level - 20) - 1];
     }
-}
-
-static bool should_level_up(uint16_t* lines_cleared_this_level, uint16_t cur_level)
-{
-    return *lines_cleared_this_level >= TETRIS_LINES_PER_LEVEL + 5 * cur_level;
 }
 
 
@@ -190,11 +193,12 @@ static void main_loop(struct field* field, uint8_t starting_level)
     enum piece_type held_piece_type = NONE_TYPE;
     bool has_held = false;
 
-    struct stats stats = { 0, starting_level, 0, 0 };
+    struct stats stats = { 0, 0, 0, 0 };
     uint64_t start_time = time_ms();
 
-    uint16_t lines_cleared_this_level = 0;
     uint16_t cur_combo_chain = 0;
+
+    level_up(&stats.level, starting_level, &game_clock, &lock_timer);
 
     while (true)
     {
@@ -216,12 +220,10 @@ static void main_loop(struct field* field, uint8_t starting_level)
         handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats.points);
 
         uint8_t lines_cleared_this_loop = field_clear_lines(field);
-        lines_cleared_this_level += lines_cleared_this_loop;
 
-        if (should_level_up(&lines_cleared_this_level, stats.level))
+        if (stats.lines_cleared >= TETRIS_LINES_PER_LEVEL * stats.level)
         {
             level_up(&stats.level, 1, &game_clock, &lock_timer);
-            lines_cleared_this_level = 0;
         }
 
         stats.lines_cleared += lines_cleared_this_loop;
@@ -250,22 +252,37 @@ void tetris_run(uint8_t starting_level)
 
 void tetris_main_menu(void)
 {
-    struct button level_0_button = {"0 "};
-    struct button level_10_button = {"10"};
-    struct button level_20_button = {"20"};
-    struct button quit_button = {"quit"};
-    struct menu starting_level_menu = { "level", CYAN, WHITE, true, false, 4, 0, level_0_button, level_10_button, level_20_button, quit_button};
-    uint8_t gaps[] = { 3, 2, 2, 3 };
+    uint8_t selection = 0;
+    bool quit_selected = false;
+    static const uint8_t starting_levels[] = { 0, 5, 10, 15, 20 };
 
-    menu_run(&starting_level_menu, gaps, 0, true);
-
-    if (starting_level_menu.selected == 3)
+    while(true)
     {
-        tetris_quit();
-        return;
+        switch (getch())
+        {
+            case 'h':
+                selection -= selection > 0 ? 1 : 0;
+                break;
+            case 'l':
+                selection += selection < 4 ? 1 : 0;
+                break;
+            case 'k':
+                quit_selected = false;
+                break;
+            case 'j':
+                quit_selected = true;
+                break;
+            case 'q':
+                tetris_quit();
+                return;
+            case 'f':
+            case ' ':
+            case 10:
+                !quit_selected ? tetris_run(starting_levels[selection]) : tetris_quit();
+                return;
+        }
+        draw_main_menu(get_scrw(), get_scrh(), quit_selected ? 5 : selection);
     }
-    uint8_t starting_levels[] = { 0, 10, 20 };
-    tetris_run(starting_levels[starting_level_menu.selected]);
 }
 void tetris_quit(void)
 {

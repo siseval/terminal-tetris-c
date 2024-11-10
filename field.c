@@ -1,5 +1,5 @@
 #include "field.h"
-#include "piece.h"
+
 
 struct field* field_create(const uint8_t width, const uint8_t height)
 {
@@ -30,7 +30,6 @@ void field_set_cur_piece(struct field* field, const enum piece_type piece_type)
     field->pos_x = field->width / 2 - PIECE_NUM_SQUARES / 2;
     field->pos_y = piece.type == I || piece.type == O ? -1 : 0;
 }
-
 
 
 enum piece_type field_get_cell(const struct field* field, const int8_t cell_x, const int8_t cell_y)
