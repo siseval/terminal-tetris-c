@@ -37,9 +37,12 @@ uint8_t field_get_draw_height(const struct field* field);
 bool field_cur_piece_collides(const struct field* field, const int8_t dx, const int8_t dy, const int8_t rotation);
 
 void field_lock_cur_piece(struct field* field);
+bool field_should_lose(struct field* field);
 
 bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy, bool do_collision_check);
 uint8_t field_get_lowest_height(const struct field* field);
+int8_t field_get_highest_square_height(const struct field* field);
+void field_soft_drop_cur_piece(struct field* field);
 void field_slam_cur_piece(struct field* field);
 bool field_rotate_cur_piece(struct field* field, const int8_t direction);
 bool field_cur_piece_will_lock(struct field* field);

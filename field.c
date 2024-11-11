@@ -1,4 +1,5 @@
 #include "field.h"
+#include "piece.h"
 
 
 struct field* field_create(const uint8_t width, const uint8_t height)
@@ -28,7 +29,7 @@ void field_set_cur_piece(struct field* field, const enum piece_type piece_type)
     struct piece piece = piece_create(piece_type);
     *field->cur_piece = piece;
     field->pos_x = field->width / 2 - PIECE_NUM_SQUARES / 2;
-    field->pos_y = piece.type == I || piece.type == O ? -1 : 0;
+    field->pos_y = piece_type == O || piece_type == I ? -3 : -2;
 }
 
 
@@ -52,7 +53,7 @@ void field_set_cell(struct field* field, const int8_t cell_x, const int8_t cell_
 
 void field_clear_grid(struct field* field)
 {
-    for (int i = 0; i < field->width * field->height; i++)
+    for (uint16_t i = 0; i < field->width * field->height; i++)
     {
         int8_t cell_x = i % field->width;
         int8_t cell_y = i / field->width;
@@ -61,7 +62,7 @@ void field_clear_grid(struct field* field)
 }
 
 
-static bool line_should_clear(const struct field* field, uint8_t line_index)
+static bool line_should_clear(const struct field* field, const uint8_t line_index)
 {
     bool broken = false;
     for (int8_t i = 0; i < field->width; i++)
@@ -74,8 +75,15 @@ static bool line_should_clear(const struct field* field, uint8_t line_index)
     return !broken;
 }
 
-static void clear_line(struct field* field, uint8_t line_index)
+static void clear_line(struct field* field, const uint8_t line_index)
 {
+    if (line_index == 0)
+    {
+        for (uint8_t i = 0; i < field->width; i++)
+        {
+            field_set_cell(field, i, line_index, NONE_TYPE);
+        }
+    }
     for (uint8_t i = line_index; i > 0; i--)
     {
         for (uint8_t j = 0; j < field->width; j++)
@@ -117,7 +125,7 @@ bool field_cur_piece_collides(const struct field* field, const int8_t dx, const 
         int cell_x = field->pos_x + field->cur_piece->coordinates[rotation][i][0] + dx;
         int cell_y = field->pos_y + field->cur_piece->coordinates[rotation][i][1] + dy;
 
-        if (cell_x < 0 || cell_x >= field->width || cell_y < 0 || cell_y >= field->height)
+        if (cell_x < 0 || cell_x >= field->width || cell_y >= field->height)
         {
             return true;
         }
@@ -132,12 +140,24 @@ bool field_cur_piece_collides(const struct field* field, const int8_t dx, const 
 
 void field_lock_cur_piece(struct field* field)
 {
-    for (int i = 0; i < PIECE_NUM_SQUARES; i++)
+    for (uint8_t i = 0; i < PIECE_NUM_SQUARES; i++)
     {
-        uint8_t cell_x = field->pos_x + field->cur_piece->coordinates[field->cur_piece->rotation][i][0];
-        uint8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
+        int8_t cell_x = field->pos_x + field->cur_piece->coordinates[field->cur_piece->rotation][i][0];
+        int8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
         field_set_cell(field, cell_x, cell_y, field->cur_piece->type);
     }
+}
+bool field_should_lose(struct field* field)
+{
+    for (int8_t i = 0; i < PIECE_NUM_SQUARES; i++)
+    {
+        int8_t cell_y = field->pos_y + field->cur_piece->coordinates[field->cur_piece->rotation][i][1];
+        if (cell_y < 0)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 
@@ -154,7 +174,7 @@ bool field_move_cur_piece(struct field* field, const int8_t dx, const int8_t dy,
 
 uint8_t field_get_lowest_height(const struct field* field)
 {
-    for (uint8_t i = field->pos_y + 1; i < field->height; i++)
+    for (int8_t i = field->pos_y + 1; i < field->height; i++)
     {
         if (field_cur_piece_collides(field, 0, i - field->pos_y, field->cur_piece->rotation))
         {
@@ -164,10 +184,27 @@ uint8_t field_get_lowest_height(const struct field* field)
     return 0;
 }
 
+int8_t field_get_highest_square_height(const struct field* field)
+{
+    for (int16_t i = 0; i < field->width * field->height; i++)
+    {
+        if (field_get_cell(field, i % field->width, i / field->width) != NONE_TYPE)
+        {
+            return i / field->width;
+        }
+    }
+    return field->height;
+}
+
 void field_slam_cur_piece(struct field* field)
 {
     field_move_cur_piece(field, 0, field_get_lowest_height(field) - field->pos_y, false);
     field_lock_cur_piece(field);
+}
+
+void field_soft_drop_cur_piece(struct field* field)
+{
+    field_move_cur_piece(field, 0, field_get_lowest_height(field) - field->pos_y, false);
 }
 
 bool field_rotate_cur_piece(struct field* field, const int8_t direction)

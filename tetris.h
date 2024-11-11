@@ -11,7 +11,7 @@
 #include "menu.h"
 #include "draw.h"
 
-#define TETRIS_REFRESH_MS 50
+#define TETRIS_REFRESH_MS 5
 #define TETRIS_MAX_JUGGLE_MOVES 15
 #define TETRIS_QUEUE_LENGTH 5
 #define TETRIS_LINES_PER_LEVEL 10
@@ -27,6 +27,7 @@ struct timer
 
 void tetris_run(uint8_t starting_level);
 void tetris_main_menu(void);
+void tetris_lose(void);
 void tetris_quit(void);
 
 

@@ -1,4 +1,5 @@
 #include "tetris.h"
+#include "field.h"
 
 static int get_scrw(void)
 {
@@ -83,6 +84,11 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
 static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, uint32_t* cur_points)
 {
     field_lock_cur_piece(field);
+    if (field_should_lose(field))
+    {
+        tetris_quit();
+        tetris_lose();
+    }
     field_set_cur_piece(field, queuebag_queue_pull(queuebag));
     game_clock->prev_time = time_ms();
     queuebag->can_hold = true;
@@ -132,8 +138,11 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             did_move = field_rotate_cur_piece(field, 1);
             break;
         case ' ':
-            field_slam_cur_piece(field);
+            field_soft_drop_cur_piece(field);
             lock_cur_piece(field, game_clock, moves_made, queuebag, cur_points);
+            break;
+        case 'k':
+            field_soft_drop_cur_piece(field);
             break;
         case 'd':
             hold_piece(field, queuebag);
@@ -209,7 +218,14 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
         if (update_timer(&game_clock))
         {
-            field_move_cur_piece(field, 0, 1, true);
+            if (stats.level < 20)
+            {
+                field_move_cur_piece(field, 0, 1, true);
+            }
+            else
+            {
+                field_soft_drop_cur_piece(field);
+            }
             handle_lock_timer(field, &lock_timer, &moves_made, false);
         }
         if (update_timer(&lock_timer))
@@ -233,13 +249,17 @@ static void main_loop(struct field* field, uint8_t starting_level)
         add_points(&stats.points, lines_cleared_this_loop, stats.level, cur_combo_chain);
 
         uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
-        uint16_t game_start_y = screen_height / 2 - field->height / 2;
-        draw_game(field, game_start_x, game_start_y);
+        uint16_t game_start_y = screen_height / 2 - field->height / 2 + 1;
+        draw_game(field, game_start_x, game_start_y, time_ms());
         draw_stats(stats, game_start_x + field->width * 2 + 2, game_start_y + 2);
         draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 3);
     }
 }
 
+void tetris_lose(void)
+{
+    
+}
 
 void tetris_run(uint8_t starting_level)
 {
