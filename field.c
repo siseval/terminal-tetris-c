@@ -77,19 +77,16 @@ static bool line_should_clear(const struct field* field, const uint8_t line_inde
 
 static void clear_line(struct field* field, const uint8_t line_index)
 {
-    if (line_index == 0)
-    {
-        for (uint8_t i = 0; i < field->width; i++)
-        {
-            field_set_cell(field, i, line_index, NONE_TYPE);
-        }
-    }
     for (uint8_t i = line_index; i > 0; i--)
     {
         for (uint8_t j = 0; j < field->width; j++)
         {
             field_set_cell(field, j, i, field_get_cell(field, j, i - 1));
         }
+    }
+    for (uint8_t i = 0; i < field->width; i++)
+    {
+        field_set_cell(field, i, 0, NONE_TYPE);
     }
 }
 

@@ -93,12 +93,28 @@ static void draw_visuals(const struct field* field, const struct stats stats, co
     draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 2);
 }
 
+static void do_screen_wipe(const uint8_t field_width, const uint8_t field_height)
+{
+    usleep(1000000);
+    for (uint16_t i = 0; i < field_height + 20; i++)
+    {
+        for (uint16_t j = 0; j  < field_width * 2 + 30; j++)
+        {
+            mvaddstr(get_scrh() / 2 - field_height / 2 - 5 + i, get_scrw() / 2 - field_width / 2 - 20 + j, " ");
+        }
+        refresh();
+        usleep(20000);
+    }
+    usleep(1000000);
+}
+
 static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running, const uint8_t starting_level)
 {
     field_lock_cur_piece(field);
     if (field_should_lose(field))
     {
         draw_visuals(field, *stats, queuebag, get_scrw(), get_scrh());
+        do_screen_wipe(field->width, field->height);
         tetris_lose(*stats, starting_level);
         *game_running = false;
         return;
@@ -277,20 +293,9 @@ static void main_loop(struct field* field, uint8_t starting_level)
     }
 }
 
-static void wipe_clear()
-{
-    usleep(1000000);
-    for (int16_t i = 0; i < 100; i++)
-    {
-        mvaddstr(i, get_scrw() / 2 - 30, "                                                         ");
-        refresh();
-        usleep(20000);
-    }
-}
 
 void tetris_lose(const struct stats stats, const uint8_t starting_level)
 {
-    wipe_clear();
     flushinp();
 
     uint8_t selection = 0;
