@@ -5,6 +5,7 @@
 #include <sys/time.h>
 #include <locale.h>
 #include <curses.h>
+#include <unistd.h>
 #include "field.h"
 #include "queuebag.h"
 #include "stats.h"
@@ -27,7 +28,7 @@ struct timer
 
 void tetris_run(uint8_t starting_level);
 void tetris_main_menu(void);
-void tetris_lose(const struct stats stats);
+void tetris_lose(const struct stats stats, const uint8_t starting_level);
 void tetris_quit(void);
 
 

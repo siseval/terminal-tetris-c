@@ -112,6 +112,7 @@ uint8_t field_get_draw_width(const struct field* field)
 {
     return field->width * 2 + 2;
 }
+
 uint8_t field_get_draw_height(const struct field* field)
 {
     return field->height + 2;
