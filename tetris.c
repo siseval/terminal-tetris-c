@@ -1,5 +1,5 @@
 #include "tetris.h"
-#include "field.h"
+#include <curses.h>
 
 static int get_scrw(void)
 {
@@ -81,19 +81,18 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     }
 }
 
-static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, uint32_t* cur_points)
+static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats)
 {
     field_lock_cur_piece(field);
     if (field_should_lose(field))
     {
-        tetris_quit();
-        tetris_lose();
+        tetris_lose(*stats);
     }
     field_set_cur_piece(field, queuebag_queue_pull(queuebag));
     game_clock->prev_time = time_ms();
     queuebag->can_hold = true;
     *moves_made = 0;
-    *cur_points += TETRIS_POINTS_PER_PIECE;
+    stats->points += TETRIS_POINTS_PER_PIECE;
 }
 
 
@@ -115,7 +114,7 @@ static void hold_piece(struct field* field, struct queuebag* queuebag)
     field_set_cur_piece(field, queuebag_bag_pull(queuebag));
 }
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, uint32_t* cur_points)
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats)
 {
     bool did_move = false;
     char input = getch();
@@ -139,7 +138,7 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             break;
         case ' ':
             field_soft_drop_cur_piece(field);
-            lock_cur_piece(field, game_clock, moves_made, queuebag, cur_points);
+            lock_cur_piece(field, game_clock, moves_made, queuebag, stats);
             break;
         case 'k':
             field_soft_drop_cur_piece(field);
@@ -184,6 +183,19 @@ static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct ti
     }
 }
 
+static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t moves_made, const struct stats stats)
+{
+    if (stats.level < 20)
+    {
+        field_move_cur_piece(field, 0, 1, true);
+    }
+    else
+    {
+        field_soft_drop_cur_piece(field);
+    }
+    handle_lock_timer(field, &lock_timer, &moves_made, false);
+}
+
 
 static void main_loop(struct field* field, uint8_t starting_level)
 {
@@ -218,22 +230,15 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
         if (update_timer(&game_clock))
         {
-            if (stats.level < 20)
-            {
-                field_move_cur_piece(field, 0, 1, true);
-            }
-            else
-            {
-                field_soft_drop_cur_piece(field);
-            }
-            handle_lock_timer(field, &lock_timer, &moves_made, false);
+            do_piece_fall(field, lock_timer, moves_made, stats);
         }
+        
         if (update_timer(&lock_timer))
         {
-            lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats.points);
+            lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats);
         }
 
-        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats.points);
+        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats);
 
         uint8_t lines_cleared_this_loop = field_clear_lines(field);
 
@@ -256,8 +261,10 @@ static void main_loop(struct field* field, uint8_t starting_level)
     }
 }
 
-void tetris_lose(void)
+void tetris_lose(const struct stats stats)
 {
+    erase();
+
     
 }
 

@@ -27,7 +27,7 @@ struct timer
 
 void tetris_run(uint8_t starting_level);
 void tetris_main_menu(void);
-void tetris_lose(void);
+void tetris_lose(const struct stats stats);
 void tetris_quit(void);
 
 
