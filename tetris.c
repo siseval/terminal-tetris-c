@@ -31,7 +31,7 @@ static bool screen_dimensions_changed(uint16_t* screen_width, uint16_t* screen_h
     return changed;
 }
 
-static bool screen_dimensions_too_large(uint16_t* screen_width, uint16_t* screen_height, struct field* field)
+static bool screen_dimensions_too_small(uint16_t* screen_width, uint16_t* screen_height, struct field* field)
 {
     *screen_width = get_scrw();
     *screen_height = get_scrh();
@@ -83,12 +83,14 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
     }
 }
 
-static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats)
+static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running)
 {
     field_lock_cur_piece(field);
     if (field_should_lose(field))
     {
         tetris_lose(*stats);
+        *game_running = false;
+        return;
     }
     field_set_cur_piece(field, queuebag_queue_pull(queuebag));
     game_clock->prev_time = time_ms();
@@ -116,7 +118,7 @@ static void hold_piece(struct field* field, struct queuebag* queuebag)
     field_set_cur_piece(field, queuebag_bag_pull(queuebag));
 }
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats)
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running)
 {
     bool did_move = false;
     char input = getch();
@@ -140,7 +142,7 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
             break;
         case ' ':
             field_soft_drop_cur_piece(field);
-            lock_cur_piece(field, game_clock, moves_made, queuebag, stats);
+            lock_cur_piece(field, game_clock, moves_made, queuebag, stats, game_running);
             break;
         case 'k':
             field_soft_drop_cur_piece(field);
@@ -198,20 +200,18 @@ static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t 
     handle_lock_timer(field, &lock_timer, &moves_made, false);
 }
 
-static void update_stats(struct stats stats, struct timer game_clock, struct timer lock_timer, const uint64_t start_time, const uint8_t lines_cleared_this_loop, uint16_t cur_combo_chain)
+static void update_stats(struct stats* stats, struct timer game_clock, struct timer lock_timer, const uint64_t start_time, const uint8_t lines_cleared_this_loop, uint16_t cur_combo_chain)
 {
+    if (stats->lines_cleared >= TETRIS_LINES_PER_LEVEL * stats->level)
+    {
+        level_up(&stats->level, 1, &game_clock, &lock_timer);
+    }
 
-        if (stats.lines_cleared >= TETRIS_LINES_PER_LEVEL * stats.level)
-        {
-            level_up(&stats.level, 1, &game_clock, &lock_timer);
-        }
+    stats->lines_cleared += lines_cleared_this_loop;
+    stats->time = time_ms() - start_time;
 
-        stats.lines_cleared += lines_cleared_this_loop;
-        stats.time = time_ms() - start_time;
-
-        cur_combo_chain = lines_cleared_this_loop > 0 ? cur_combo_chain + 1 : 0;
-        add_points(&stats.points, lines_cleared_this_loop, stats.level, cur_combo_chain);
-
+    cur_combo_chain = lines_cleared_this_loop > 0 ? cur_combo_chain + 1 : 0;
+    add_points(&stats->points, lines_cleared_this_loop, stats->level, cur_combo_chain);
 }
 
 static void draw_visuals(const struct field* field, const struct stats stats, const struct queuebag* queuebag, uint16_t screen_width, const uint16_t screen_height)
@@ -219,8 +219,8 @@ static void draw_visuals(const struct field* field, const struct stats stats, co
     uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
     uint16_t game_start_y = screen_height / 2 - field->height / 2 + 1;
     draw_game(field, game_start_x, game_start_y, time_ms());
-    draw_stats(stats, game_start_x + field->width * 2 + 2, game_start_y + 2);
-    draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 3);
+    draw_stats(stats, game_start_x + field->width * 2 + 2, game_start_y + 1);
+    draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 2);
 }
 
 static void main_loop(struct field* field, uint8_t starting_level)
@@ -247,9 +247,11 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
     level_up(&stats.level, starting_level, &game_clock, &lock_timer);
 
-    while (true)
+    bool game_running = true;
+
+    while (game_running)
     {
-        if (screen_dimensions_too_large(&screen_width, &screen_height, field)) 
+        if (screen_dimensions_too_small(&screen_width, &screen_height, field)) 
         {
             continue;
         }
@@ -261,13 +263,13 @@ static void main_loop(struct field* field, uint8_t starting_level)
         
         if (update_timer(&lock_timer))
         {
-            lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats);
+            lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats, &game_running);
         }
 
-        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats);
+        handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats, &game_running);
 
         uint8_t lines_cleared_this_loop = field_clear_lines(field);
-        update_stats(stats, game_clock, lock_timer, start_time, lines_cleared_this_loop, cur_combo_chain);
+        update_stats(&stats, game_clock, lock_timer, start_time, lines_cleared_this_loop, cur_combo_chain);
 
         draw_visuals(field, stats, queuebag, screen_width, screen_height);        
     }
@@ -275,9 +277,38 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
 void tetris_lose(const struct stats stats)
 {
-    erase();
+    uint8_t selection = 0;
+    bool quit_selected = false;
+    static const uint8_t starting_levels[] = { 0, 5, 10, 15, 20 };
 
-    
+    while(true)
+    {
+        switch (getch())
+        {
+            case 'h':
+                selection -= selection > 0 ? 1 : 0;
+                break;
+            case 'l':
+                selection += selection < 4 ? 1 : 0;
+                break;
+            case 'k':
+                quit_selected = false;
+                break;
+            case 'j':
+                quit_selected = true;
+                break;
+            case 'q':
+                tetris_quit();
+                return;
+            case 'f':
+            case ' ':
+            case 10:
+                !quit_selected ? tetris_run(starting_levels[selection]) : tetris_quit();
+                return;
+        }
+        draw_main_menu(get_scrw(), get_scrh(), quit_selected ? 5 : selection);
+    }
+
 }
 
 void tetris_run(uint8_t starting_level)
