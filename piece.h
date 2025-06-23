@@ -1,5 +1,5 @@
-#ifndef TETROMINO_H
-#define TETROMINO_H
+#ifndef PIECE_H
+#define PIECE_H
 
 #include <curses.h>
 #include <stdint.h>

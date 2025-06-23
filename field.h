@@ -1,5 +1,5 @@
-#ifndef PLAYFIELD_H
-#define PLAYFIELD_H
+#ifndef FIELD_H
+#define FIELD_H
 
 #include <stdlib.h>
 #include <string.h>

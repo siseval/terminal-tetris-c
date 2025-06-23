@@ -1,5 +1,4 @@
 #include "field.h"
-#include "piece.h"
 
 
 struct field* field_create(const uint8_t width, const uint8_t height)
@@ -118,10 +117,10 @@ uint8_t field_get_draw_height(const struct field* field)
 
 bool field_cur_piece_collides(const struct field* field, const int8_t dx, const int8_t dy, const int8_t rotation)
 {
-    for (int i = 0; i < PIECE_NUM_SQUARES; i++)
+    for (int32_t i = 0; i < PIECE_NUM_SQUARES; i++)
     {
-        int cell_x = field->pos_x + field->cur_piece->coordinates[rotation][i][0] + dx;
-        int cell_y = field->pos_y + field->cur_piece->coordinates[rotation][i][1] + dy;
+        int32_t cell_x = field->pos_x + field->cur_piece->coordinates[rotation][i][0] + dx;
+        int32_t cell_y = field->pos_y + field->cur_piece->coordinates[rotation][i][1] + dy;
 
         if (cell_x < 0 || cell_x >= field->width || cell_y >= field->height)
         {
@@ -145,6 +144,7 @@ void field_lock_cur_piece(struct field* field)
         field_set_cell(field, cell_x, cell_y, field->cur_piece->type);
     }
 }
+
 bool field_should_lose(struct field* field)
 {
     for (int8_t i = 0; i < PIECE_NUM_SQUARES; i++)
