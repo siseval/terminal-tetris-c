@@ -10,7 +10,7 @@ add_executable(tetris
   piece.c
   piece-data.c
   stats.c
-  )
+)
 
 set(CURSES_NEED_NCURSES TRUE)
 set(CURSES_NEED_WIDE TRUE)

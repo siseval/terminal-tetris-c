@@ -82,7 +82,7 @@ static void handle_lock_timer(struct field* field, struct timer* lock_timer, uin
 
 static void draw_visuals(const struct field* field, const struct stats stats, const struct queuebag* queuebag, uint16_t screen_width, const uint16_t screen_height)
 {
-    uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2;
+    uint16_t game_start_x = screen_width / 2 - (field->width * 2) / 2 + 1;
     uint16_t game_start_y = screen_height / 2 - field->height / 2 + 1;
 
     draw_game(field, game_start_x, game_start_y, time_ms());
