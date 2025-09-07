@@ -9,6 +9,7 @@ struct stats
     uint32_t points;
     uint16_t level;
     uint16_t lines_cleared;
+    uint16_t lines_this_level;
     uint64_t time;
 };
 

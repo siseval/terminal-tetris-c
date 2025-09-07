@@ -192,7 +192,7 @@ static void add_points(uint32_t* cur_points, uint8_t lines_cleared, uint16_t cur
     *cur_points += points_per_combo_level * cur_combo_chain;
 }
 
-static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct timer* game_clock, struct timer* lock_timer)
+static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct timer* game_clock, struct timer* lock_timer, struct stats* stats)
 {
     if (levels_gained <= 0)
     {
@@ -209,6 +209,7 @@ static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct ti
     {
         lock_timer->trigger_time = timer_times_ms[(*cur_level - 20) - 1];
     }
+    stats->lines_this_level = 0;
 }
 
 static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t moves_made, const struct stats stats)
@@ -226,12 +227,13 @@ static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t 
 
 static void update_stats(struct stats* stats, struct timer* game_clock, struct timer* lock_timer, const uint64_t start_time, const uint8_t lines_cleared_this_loop, uint16_t cur_combo_chain)
 {
-    if (stats->lines_cleared >= TETRIS_LINES_PER_LEVEL * stats->level)
+    if (stats->lines_this_level >= TETRIS_LINES_PER_LEVEL)
     {
-        level_up(&stats->level, 1, game_clock, lock_timer);
+        level_up(&stats->level, 1, game_clock, lock_timer, stats);
     }
 
     stats->lines_cleared += lines_cleared_this_loop;
+    stats->lines_this_level += lines_cleared_this_loop;
     stats->time = time_ms() - start_time;
 
     cur_combo_chain = lines_cleared_this_loop > 0 ? cur_combo_chain + 1 : 0;
@@ -260,7 +262,7 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
     uint16_t cur_combo_chain = 0;
 
-    level_up(&stats.level, starting_level, &game_clock, &lock_timer);
+    level_up(&stats.level, starting_level, &game_clock, &lock_timer, &stats);
 
     bool game_running = true;
 
