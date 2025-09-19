@@ -15,5 +15,6 @@ Tetris running in a unix terminal, using ncurses
 - `A` and `S` to rotate
 - `D` to store a piece
 
+### Demo  
 
 ![alt-text](https://github.com/siseval/terminal-tetris-c/blob/main/demo.gif)
