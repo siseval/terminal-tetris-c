@@ -1,10 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <string.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include "piece.h"
+#include <piece.h>
 
 #define QUEUE_LENGTH 5
 

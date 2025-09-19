@@ -1,15 +1,23 @@
 cmake_minimum_required(VERSION 3.10)
-set(CMAKE_C_STANDARD 23)
 project(tetris)
+
+set(CMAKE_C_STANDARD 23)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
 add_executable(tetris
-  main.c
-  tetris.c
-  queuebag.c
-  draw.c
-  field.c
-  piece.c
-  piece-data.c
-  stats.c
+    src/main.c
+    src/tetris.c
+    src/queuebag.c
+    src/draw.c
+    src/field.c
+    src/piece.c
+    src/piece-data.c
+    src/stats.c
+)
+
+target_include_directories(tetris
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
 find_package(Curses REQUIRED)

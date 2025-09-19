@@ -1,4 +1,4 @@
-#include "piece.h"
+#include <piece.h>
 
 struct piece piece_create(const enum piece_type type)
 {

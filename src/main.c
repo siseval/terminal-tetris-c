@@ -1,4 +1,6 @@
-#include "tetris.h"
+#include <locale.h>
+#include <draw.h>
+#include <tetris.h>
 
 static void init_curses()
 {

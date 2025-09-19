@@ -1,4 +1,5 @@
-#include "stats.h"
+#include <stdio.h>
+#include <stats.h>
 
 void stats_time_as_str(char str[16], const uint64_t time_ms)
 {

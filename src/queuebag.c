@@ -1,5 +1,8 @@
-#include "queuebag.h"
-#include "piece.h"
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <queuebag.h>
+#include <piece.h>
 
 
 struct queuebag* queuebag_create()

@@ -1,4 +1,5 @@
-#include "draw.h"
+#include <string.h>
+#include <draw.h>
 
 
 static void set_color(enum draw_color color)

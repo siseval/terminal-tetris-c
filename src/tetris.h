@@ -1,16 +1,10 @@
 #ifndef TETRIS_H
 #define TETRIS_H
 
-#include <stdlib.h>
 #include <sys/time.h>
-#include <locale.h>
 #include <curses.h>
 #include <unistd.h>
-#include "field.h"
-#include "queuebag.h"
-#include "stats.h"
-#include "menu.h"
-#include "draw.h"
+#include <stats.h>
 
 #define TETRIS_REFRESH_MS 5
 #define TETRIS_MAX_JUGGLE_MOVES 15

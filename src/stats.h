@@ -2,7 +2,6 @@
 #define STATS_H
 
 #include <stdint.h>
-#include <stdio.h>
 
 struct stats
 {

@@ -1,9 +1,9 @@
 #ifndef PIECE_H
 #define PIECE_H
 
-#include <curses.h>
 #include <stdint.h>
-#include "piece-data.c"
+#include <curses.h>
+#include <piece-data.c>
 
 #define PIECE_NUM_SQUARES 4
 #define PIECE_NUM_ROTATIONS 4

@@ -1,9 +1,8 @@
 #ifndef FIELD_H
 #define FIELD_H
 
-#include <stdlib.h>
-#include <string.h>
-#include "piece.h"
+#include <stdint.h>
+#include <piece.h>
 
 
 struct field
