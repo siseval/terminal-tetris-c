@@ -1,7 +1,7 @@
 #ifndef QUEUE_H
 #define QUEUE_H
 
-#include <piece.h>
+#include "piece.h"
 
 #define QUEUE_LENGTH 5
 

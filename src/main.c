@@ -1,6 +1,10 @@
+#include <stdlib.h>
+#include <string.h>
 #include <locale.h>
-#include <draw.h>
-#include <tetris.h>
+#include <curses.h>
+
+#include "tetris.h"
+#include "draw.h"
 
 static void init_curses()
 {
@@ -26,6 +30,7 @@ static void init_curses()
 int main()
 {
     setlocale(LC_ALL, "");
+    setenv("TERM", "xterm-256color", 1);
     init_curses();
 
     attron(A_BOLD);

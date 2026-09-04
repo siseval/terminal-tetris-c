@@ -2,8 +2,7 @@
 #define FIELD_H
 
 #include <stdint.h>
-#include <piece.h>
-
+#include "piece.h"
 
 struct field
 {

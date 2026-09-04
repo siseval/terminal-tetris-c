@@ -2,9 +2,10 @@
 #define DRAW_H
 
 #include <stdint.h>
-#include <queuebag.h>
-#include <stats.h>
-#include <field.h>
+
+#include "queuebag.h"
+#include "stats.h"
+#include "field.h"
 
 #define BOX_TOP_LEFT_STR "╭"
 #define BOX_TOP_RIGHT_STR "╮"

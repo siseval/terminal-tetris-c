@@ -1,9 +1,10 @@
 #include <stdlib.h>
-#include <tetris.h>
-#include <field.h>
-#include <queuebag.h>
-#include <stats.h>
-#include <draw.h>
+
+#include "tetris.h"
+#include "field.h"
+#include "queuebag.h"
+#include "stats.h"
+#include "draw.h"
 
 static int get_scrw(void)
 {

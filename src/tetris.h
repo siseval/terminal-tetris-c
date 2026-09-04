@@ -4,7 +4,8 @@
 #include <sys/time.h>
 #include <curses.h>
 #include <unistd.h>
-#include <stats.h>
+
+#include "stats.h"
 
 #define TETRIS_REFRESH_MS 5
 #define TETRIS_MAX_JUGGLE_MOVES 15

@@ -3,7 +3,8 @@
 
 #include <stdint.h>
 #include <curses.h>
-#include <piece-data.c>
+
+#include "piece-data.c"
 
 #define PIECE_NUM_SQUARES 4
 #define PIECE_NUM_ROTATIONS 4

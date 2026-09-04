@@ -1,6 +1,6 @@
-#include <stdlib.h>
-#include <field.h>
+#include "field.h"
 
+#include <stdlib.h>
 
 struct field* field_create(const uint8_t width, const uint8_t height)
 {

@@ -20,9 +20,9 @@ target_include_directories(tetris
         ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+find_package(Curses REQUIRED)
 set(CURSES_NEED_NCURSES TRUE)
 set(CURSES_NEED_WIDE TRUE)
-find_package(Curses REQUIRED)
 
 include_directories(${CURSES_INCLUDE_DIRS})
 target_link_libraries(tetris ${CURSES_LIBRARY})
