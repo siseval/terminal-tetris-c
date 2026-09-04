@@ -123,8 +123,8 @@ static void draw_ui_piece(const enum piece_type piece_type, const uint16_t start
 {
     if (piece_type != NONE_TYPE)
     {
-        uint8_t held_x = start_x + 1;
-        uint8_t held_y = start_y;
+        uint16_t held_x = start_x + 1;
+        uint16_t held_y = start_y;
         if (piece_type == I || piece_type == O)
         {
             held_x -= 1;
@@ -142,9 +142,9 @@ void draw_next_and_held(const struct queuebag* queuebag, const uint16_t start_x,
     draw_box(HELD_BOX_WIDTH, HELD_BOX_HEIGHT / 2 - (queuebag->held_piece_type == I ? 1 : 0), start_x - 1, start_y - 1, GRAY, true);
     mvaddstr(start_y - 1, start_x + 3, "held");
 
-    uint8_t running_height_sum = HELD_BOX_HEIGHT;
+    uint16_t running_height_sum = HELD_BOX_HEIGHT;
 
-    for (uint8_t i = 0; i < NEXT_BOX_NUM_PIECES; i++)
+    for (uint16_t i = 0; i < NEXT_BOX_NUM_PIECES; i++)
     {
         draw_ui_piece(queuebag->queue[i], start_x, start_y + running_height_sum);
         running_height_sum += queuebag->queue[i] == I ? 2 : 3;
@@ -153,7 +153,7 @@ void draw_next_and_held(const struct queuebag* queuebag, const uint16_t start_x,
     mvaddstr(start_y + HELD_BOX_HEIGHT - 1, start_x + 3, "next");
 }
 
-static void draw_stats_element(const uint16_t start_x, const uint16_t start_y, const uint8_t width, const char* stat_label, const char* stat_str, const bool centered)
+static void draw_stats_element(const uint16_t start_x, const uint16_t start_y, const uint16_t width, const char* stat_label, const char* stat_str, const bool centered)
 {
     set_color(GRAY);
     mvaddstr(start_y + 1, start_x + 2, stat_label);
@@ -184,7 +184,7 @@ void draw_stats(const struct stats stats, const uint16_t start_x, const uint16_t
     draw_stats_element(start_x, start_y + 10, STATS_BOX_WIDTH, "time:", time_str, false);
 }
 
-void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height, const struct stats stats, const uint8_t selection)
+void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height, const struct stats stats, const uint16_t selection)
 {
     erase();
     uint16_t center_pos_x = screen_width / 2;
@@ -196,8 +196,8 @@ void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height,
     mvaddstr(top_box_pos_y + 1, center_pos_x - 2, "stats");
 
     uint16_t main_box_pos_y = top_box_pos_y + 4;
-    uint8_t main_box_width = 13;
-    uint8_t main_box_height = 8;
+    uint16_t main_box_width = 13;
+    uint16_t main_box_height = 8;
     draw_box(main_box_width, main_box_height, center_pos_x - main_box_width / 2 - 1, main_box_pos_y, GRAY, false);
 
     char points_str[16];
@@ -230,12 +230,12 @@ void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height,
 
 }
 
-void draw_main_menu(const uint16_t screen_width, const uint16_t screen_height, const uint8_t selection)
+void draw_main_menu(const uint16_t screen_width, const uint16_t screen_height, const uint16_t selection)
 {
-    static const uint8_t menu_width = 38;
-    static const uint8_t menu_height = 15;
-    static const uint8_t button_width = 5;
-    static const uint8_t button_height = 1;
+    static const uint16_t menu_width = 38;
+    static const uint16_t menu_height = 15;
+    static const uint16_t button_width = 5;
+    static const uint16_t button_height = 1;
 
     erase();
     uint16_t center_pos_x = screen_width / 2;
@@ -251,7 +251,7 @@ void draw_main_menu(const uint16_t screen_width, const uint16_t screen_height, c
     mvaddstr(main_box_pos_y, center_pos_x - 2, "level");
 
     char* starting_levels_str[] = { " 0", " 5", "1 0", "1 5", "2 0" };
-    for (uint8_t i = 0; i < 5; i++)
+    for (uint16_t i = 0; i < 5; i++)
     {
         enum draw_color button_color = selection == i ? YELLOW : GRAY;
         

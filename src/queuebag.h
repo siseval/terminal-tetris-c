@@ -11,7 +11,7 @@ struct queuebag
     bool can_hold;
     enum piece_type queue[QUEUE_LENGTH];
     enum piece_type bag[PIECE_NUM_TYPES];
-    uint8_t bag_index;
+    uint16_t bag_index;
 };
 
 struct queuebag* queuebag_create();

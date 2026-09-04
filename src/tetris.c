@@ -64,7 +64,7 @@ static bool update_timer(struct timer* timer)
     return false;
 }
 
-static void handle_lock_timer(struct field* field, struct timer* lock_timer, uint8_t* moves_made, bool moved)
+static void handle_lock_timer(struct field* field, struct timer* lock_timer, uint16_t* moves_made, bool moved)
 {
     if (field_cur_piece_will_lock(field))
     {
@@ -97,7 +97,7 @@ static void draw_visuals(const struct field* field, const struct stats stats, co
     draw_next_and_held(queuebag, game_start_x - PIECE_NUM_SQUARES * 2 - 6, game_start_y + 2);
 }
 
-static void do_screen_wipe(const uint8_t field_width, const uint8_t field_height)
+static void do_screen_wipe(const uint16_t field_width, const uint16_t field_height)
 {
     usleep(1000000);
     for (uint16_t i = 0; i < field_height + 20; i++)
@@ -112,7 +112,7 @@ static void do_screen_wipe(const uint8_t field_width, const uint8_t field_height
     usleep(1000000);
 }
 
-static void lock_cur_piece(struct field* field, struct timer* game_clock, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running, const uint8_t starting_level)
+static void lock_cur_piece(struct field* field, struct timer* game_clock, uint16_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running, const uint16_t starting_level)
 {
     field_lock_cur_piece(field);
     if (field_should_lose(field))
@@ -149,7 +149,7 @@ static void hold_piece(struct field* field, struct queuebag* queuebag)
     field_set_cur_piece(field, queuebag_bag_pull(queuebag));
 }
 
-static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint8_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running, const uint8_t starting_level)
+static void handle_input(struct field* field, struct timer* game_clock, struct timer* lock_timer, uint16_t* moves_made, struct queuebag* queuebag, struct stats* stats, bool* game_running, const uint16_t starting_level)
 {
     bool did_move = false;
     char input = getch();
@@ -190,7 +190,7 @@ static void handle_input(struct field* field, struct timer* game_clock, struct t
 }
 
 
-static void add_points(uint32_t* cur_points, uint8_t lines_cleared, uint16_t cur_level, uint16_t cur_combo_chain)
+static void add_points(uint32_t* cur_points, uint16_t lines_cleared, uint16_t cur_level, uint16_t cur_combo_chain)
 {
     static const uint16_t points_per_line_clear[] = { 100, 300, 500, 800 };
     static const uint16_t points_per_combo_level = 50;
@@ -199,7 +199,7 @@ static void add_points(uint32_t* cur_points, uint8_t lines_cleared, uint16_t cur
     *cur_points += points_per_combo_level * cur_combo_chain;
 }
 
-static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct timer* game_clock, struct timer* lock_timer, struct stats* stats)
+static void level_up(uint16_t* cur_level, const uint16_t levels_gained, struct timer* game_clock, struct timer* lock_timer, struct stats* stats)
 {
     if (levels_gained <= 0)
     {
@@ -219,7 +219,7 @@ static void level_up(uint16_t* cur_level, const uint8_t levels_gained, struct ti
     stats->lines_this_level = 0;
 }
 
-static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t moves_made, const struct stats stats)
+static void do_piece_fall(struct field* field, struct timer lock_timer, uint16_t moves_made, const struct stats stats)
 {
     if (stats.level < 20)
     {
@@ -232,7 +232,7 @@ static void do_piece_fall(struct field* field, struct timer lock_timer, uint8_t 
     handle_lock_timer(field, &lock_timer, &moves_made, false);
 }
 
-static void update_stats(struct stats* stats, struct timer* game_clock, struct timer* lock_timer, const uint64_t start_time, const uint8_t lines_cleared_this_loop, uint16_t cur_combo_chain)
+static void update_stats(struct stats* stats, struct timer* game_clock, struct timer* lock_timer, const uint64_t start_time, const uint16_t lines_cleared_this_loop, uint16_t cur_combo_chain)
 {
     if (stats->lines_this_level >= TETRIS_LINES_PER_LEVEL)
     {
@@ -247,7 +247,7 @@ static void update_stats(struct stats* stats, struct timer* game_clock, struct t
     add_points(&stats->points, lines_cleared_this_loop, stats->level, cur_combo_chain);
 }
 
-static void main_loop(struct field* field, uint8_t starting_level)
+static void main_loop(struct field* field, uint16_t starting_level)
 {
     uint16_t screen_width = 0;
     uint16_t screen_height = 0;
@@ -255,7 +255,7 @@ static void main_loop(struct field* field, uint8_t starting_level)
     struct timer game_clock = { true, 480, time_ms() };
     struct timer lock_timer = { false, 480, time_ms() };
 
-    uint8_t moves_made = 0;
+    uint16_t moves_made = 0;
 
     struct queuebag* queuebag = queuebag_create();
 
@@ -284,7 +284,7 @@ static void main_loop(struct field* field, uint8_t starting_level)
         {
             do_piece_fall(field, lock_timer, moves_made, stats);
         }
-        
+
         if (update_timer(&lock_timer))
         {
             lock_cur_piece(field, &game_clock, &moves_made, queuebag, &stats, &game_running, starting_level);
@@ -292,7 +292,8 @@ static void main_loop(struct field* field, uint8_t starting_level)
 
         handle_input(field, &game_clock, &lock_timer, &moves_made, queuebag, &stats, &game_running, starting_level);
 
-        uint8_t lines_cleared_this_loop = field_clear_lines(field);
+        uint16_t lines_cleared_this_loop = field_clear_lines(field);
+        lines_cleared_this_loop = 0;
         update_stats(&stats, &game_clock, &lock_timer, start_time, lines_cleared_this_loop, cur_combo_chain);
 
         draw_visuals(field, stats, queuebag, screen_width, screen_height);        
@@ -300,11 +301,11 @@ static void main_loop(struct field* field, uint8_t starting_level)
 }
 
 
-void tetris_lose(const struct stats stats, const uint8_t starting_level)
+void tetris_lose(const struct stats stats, const uint16_t starting_level)
 {
     flushinp();
 
-    uint8_t selection = 0;
+    uint16_t selection = 0;
     bool quit_selected = false;
 
     while(true)
@@ -330,7 +331,7 @@ void tetris_lose(const struct stats stats, const uint8_t starting_level)
     }
 }
 
-void tetris_run(uint8_t starting_level)
+void tetris_run(uint16_t starting_level)
 {
     srand(time(NULL));
     struct field* field = field_create(10, 20);
@@ -341,9 +342,9 @@ void tetris_run(uint8_t starting_level)
 
 void tetris_main_menu(void)
 {
-    uint8_t selection = 0;
+    uint16_t selection = 0;
     bool quit_selected = false;
-    static const uint8_t starting_levels[] = { 0, 5, 10, 15, 20 };
+    static const uint16_t starting_levels[] = { 0, 5, 10, 15, 20 };
 
     while(true)
     {

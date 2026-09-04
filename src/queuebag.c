@@ -14,7 +14,7 @@ struct queuebag* queuebag_create()
     queuebag->can_hold = true;
 
     queuebag->bag_index = 0;
-    for (uint8_t i = 0; i < PIECE_NUM_TYPES; i++)
+    for (uint16_t i = 0; i < PIECE_NUM_TYPES; i++)
     {
         queuebag->bag[i] = i;
     }
@@ -28,10 +28,10 @@ struct queuebag* queuebag_create()
 
 void queuebag_bag_shuffle(struct queuebag* queuebag)
 {
-    for (uint8_t i = 0; i < PIECE_NUM_TYPES * 2; i++)
+    for (uint16_t i = 0; i < PIECE_NUM_TYPES * 2; i++)
     {
-        uint8_t first_index = rand() % PIECE_NUM_TYPES;
-        uint8_t second_index = rand() % PIECE_NUM_TYPES;
+        uint16_t first_index = rand() % PIECE_NUM_TYPES;
+        uint16_t second_index = rand() % PIECE_NUM_TYPES;
 
         enum piece_type buffer = queuebag->bag[first_index];
         queuebag->bag[first_index] = queuebag->bag[second_index];
@@ -53,7 +53,7 @@ enum piece_type queuebag_bag_pull(struct queuebag* queuebag)
 
 void queuebag_queue_fill(struct queuebag* queuebag)
 {
-    for (uint8_t i = 0; i < QUEUE_LENGTH; i++)
+    for (uint16_t i = 0; i < QUEUE_LENGTH; i++)
     {
         queuebag->queue[i] = queuebag->bag[queuebag->bag_index];
         queuebag->bag_index += 1;
@@ -67,7 +67,7 @@ void queuebag_queue_fill(struct queuebag* queuebag)
 enum piece_type queuebag_queue_pull(struct queuebag* queuebag)
 {
     enum piece_type pulled_type = queuebag->queue[0];
-    for (uint8_t i = 0; i < QUEUE_LENGTH - 1; i++)
+    for (uint16_t i = 0; i < QUEUE_LENGTH - 1; i++)
     {
         queuebag->queue[i] = queuebag->queue[i + 1];
     }

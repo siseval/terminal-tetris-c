@@ -21,9 +21,9 @@ struct timer
     uint64_t prev_time;
 };
 
-void tetris_run(uint8_t starting_level);
+void tetris_run(uint16_t starting_level);
 void tetris_main_menu(void);
-void tetris_lose(const struct stats stats, const uint8_t starting_level);
+void tetris_lose(const struct stats stats, const uint16_t starting_level);
 void tetris_quit(void);
 
 

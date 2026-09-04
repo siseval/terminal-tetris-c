@@ -49,8 +49,8 @@ void draw_box(const int box_width, const int box_height, const int start_x, cons
 
 void draw_game(const struct field* field, const int start_x, const int start_y, const uint64_t time_ms);
 
-void draw_main_menu(const uint16_t screen_width, const uint16_t screen_height, const uint8_t selection);
-void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height, const struct stats stats, const uint8_t selection);
+void draw_main_menu(const uint16_t screen_width, const uint16_t screen_height, const uint16_t selection);
+void draw_lose_screen(const uint16_t screen_width, const uint16_t screen_height, const struct stats stats, const uint16_t selection);
 
 void draw_next_and_held(const struct queuebag* queuebag, const uint16_t start_x, const uint16_t start_y);
 void draw_stats(const struct stats stats, const uint16_t start_x, const uint16_t start_y);
