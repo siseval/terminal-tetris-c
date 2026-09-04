@@ -1,5 +1,14 @@
+#define _XOPEN_SOURCE_EXTENDED 
+
 #include "draw.h"
 
+#include <ncurses.h>
+#include <string.h>
+
+#define _XOPEN_SOURCE_EXTENDED 
+
+#include "draw.h"
+#include <ncurses.h>
 #include <string.h>
 
 static void set_color(enum draw_color color)
@@ -8,104 +17,103 @@ static void set_color(enum draw_color color)
     color == GRAY ? attroff(A_BOLD) : attron(A_BOLD);
 }
 
-void draw_box(const uint8_t box_width, const uint8_t box_height, const uint8_t start_x, const uint8_t start_y, const enum draw_color color, const bool draw_sides)
+void draw_box(const int box_width, const int box_height, const int start_x, const int start_y, const enum draw_color color, const bool draw_sides)
 {
-    int8_t top_y = start_y;
-    int8_t bot_y = start_y + box_height + 1;
-    int8_t left_x = start_x;
-    int8_t right_x = start_x + box_width;
+    int top_y = start_y;
+    int bot_y = start_y + box_height + 1;
+    int left_x = start_x;
+    int right_x = start_x + box_width;
 
     set_color(color);
-    mvaddstr(top_y, left_x, BOX_TOP_LEFT_STR);
-    mvaddstr(bot_y, left_x, BOX_BOT_LEFT_STR);
+
+    mvaddwstr(top_y, left_x, BOX_TOP_LEFT_STR);
+    mvaddwstr(bot_y, left_x, BOX_BOT_LEFT_STR);
     for (int i = 1; i <= right_x - left_x; i++)
     {
-        mvaddstr(top_y, left_x + i, BOX_TOP_LINE_STR);
-        mvaddstr(bot_y, left_x + i, BOX_BOT_LINE_STR);
+        mvaddwstr(top_y, left_x + i, BOX_TOP_LINE_STR);
+        mvaddwstr(bot_y, left_x + i, BOX_BOT_LINE_STR);
     }
-    mvaddstr(top_y, right_x + 1, BOX_TOP_RIGHT_STR);
-    mvaddstr(bot_y, right_x + 1, BOX_BOT_RIGHT_STR); 
+    mvaddwstr(top_y, right_x + 1, BOX_TOP_RIGHT_STR);
+    mvaddwstr(bot_y, right_x + 1, BOX_BOT_RIGHT_STR); 
+
     if (!draw_sides)
     {
         return;
     }
     for (int i = 1; i < bot_y - top_y; i++)
     {
-        mvaddstr(top_y + i, left_x, BOX_VERT_LINE_STR);
-        mvaddstr(top_y + i, right_x + 1, BOX_VERT_LINE_STR);
+        mvaddwstr(top_y + i, left_x, BOX_VERT_LINE_STR);
+        mvaddwstr(top_y + i, right_x + 1, BOX_VERT_LINE_STR);
     }
 }
 
-void draw_field_grid(const enum piece_type* grid, const uint8_t width, const uint8_t height, const uint8_t start_x, const uint8_t start_y)
+void draw_field_grid(const enum piece_type* grid, const int width, const int height, const int start_x, const int start_y)
 {
     for (int i = 0; i < width * height; i++)
     {
-        int8_t cell_x = i % width;
-        int8_t cell_y = i / width;
+        int cell_x = i % width;
+        int cell_y = i / width;
         enum piece_type cell_type = grid[cell_y * width + cell_x];
-        char* cell_str = cell_type == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
-        if (cell_type < 0 || cell_type >= PIECE_NUM_TYPES)
-        {
-            int s = 0;
-        }
+
+        const wchar_t* cell_str = cell_type == NONE_TYPE ? GRID_EMPTY_CELL_STR : PIECE_SQUARE_STR;
         set_color((enum draw_color)cell_type);
-        mvaddstr(start_y + cell_y, start_x + cell_x * 2, cell_str);
+
+        mvaddwstr(start_y + cell_y, start_x + cell_x * 2, cell_str);
     }
 }
 
-
-static void draw_piece(const struct piece* piece, const uint8_t start_x, const uint8_t start_y, char* symbol)
+static void draw_piece(const struct piece* piece, const int start_x, const int start_y, const wchar_t* symbol)
 {
-    for (int8_t i = 0; i < PIECE_NUM_SQUARES; i++)
+    for (int i = 0; i < PIECE_NUM_SQUARES; i++)
     {
-        int8_t cell_x = start_x + piece->coordinates[piece->rotation][i][0] * 2;
-        int8_t cell_y = start_y + piece->coordinates[piece->rotation][i][1];
-        mvaddstr(cell_y, cell_x, symbol);
+        int cell_x = start_x + piece->coordinates[piece->rotation][i][0] * 2;
+        int cell_y = start_y + piece->coordinates[piece->rotation][i][1];
+        mvaddwstr(cell_y, cell_x, symbol);
     }
 }
 
-static void draw_game_box_top(const struct field* field, const uint16_t start_x, const uint16_t start_y)
+static void draw_game_box_top(const struct field* field, const int start_x, const int start_y)
 {
     mvaddstr(start_y, start_x + field->width / 2, "c-tetris");
 
-    for (uint8_t i = 0; i < field->width * 2; i += 2)
+    for (int i = 0; i < field->width * 2; i += 2)
     {
         mvaddstr(start_y - 1, start_x + i, "  ");
         mvaddstr(start_y - 2, start_x + i, "  ");
     }
-
 }
 
-static void draw_lose_field(const struct field* field, const uint16_t start_x, const uint16_t start_y, const uint64_t time_ms)
+static void draw_lose_field(const struct field* field, const int start_x, const int start_y, const uint64_t time_ms)
 {
     bool close_to_losing = field_get_highest_square_height(field) < 3;
-    char* lose_field_str = "• ";
+
+    const wchar_t* lose_field_str = L"• ";
     if (close_to_losing)
     {
-        lose_field_str = (time_ms / 300) % 2 == 0 ? "· " : "• ";
-    char* lose_field_str = "  ";
+        lose_field_str = (time_ms / 300) % 2 == 0 ? L"· " : L"• ";
     }
+
     set_color(GRAY);
     attroff(A_BOLD);
-    for (uint8_t i = 0; i < field->width * 2; i += 2)
+    for (int i = 0; i < field->width * 2; i += 2)
     {
-        mvaddstr(start_y, start_x + i, lose_field_str);
-        mvaddstr(start_y + 1, start_x + i, lose_field_str);
+        mvaddwstr(start_y, start_x + i, lose_field_str);
+        mvaddwstr(start_y + 1, start_x + i, lose_field_str);
     }
 }
 
-void draw_game(const struct field* field, const uint16_t start_x, const uint16_t start_y, const uint64_t time_ms)
+void draw_game(const struct field* field, const int start_x, const int start_y, const uint64_t time_ms)
 {
     erase();
 
     draw_field_grid(field->grid, field->width, field->height, start_x, start_y);
     draw_lose_field(field, start_x, start_y - 2, time_ms);
-    
+
     set_color((enum draw_color)field->cur_piece->type);
     draw_piece(field->cur_piece, start_x + field->pos_x * 2, start_y + field->pos_y + (field_get_lowest_height(field) - field->pos_y), PIECE_GHOST_SQUARE_STR);
     draw_piece(field->cur_piece, start_x + field->pos_x * 2, start_y + field->pos_y, PIECE_SQUARE_STR);
 
-    int8_t game_box_start_y = start_y - 3;
+    int game_box_start_y = start_y - 3;
 
     draw_box(field->width * 2 + 1, field->height + 2, start_x - 2, game_box_start_y, GRAY, false);
     draw_game_box_top(field, start_x, game_box_start_y);
